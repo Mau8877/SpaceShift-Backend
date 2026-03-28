@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
+import com.sw.api.models.Rol;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Getter @Setter
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuario")
 public class Usuario extends Auditable implements UserDetails {
 
     @Id
@@ -32,9 +32,12 @@ public class Usuario extends Auditable implements UserDetails {
 
     @Column(name = "ultima_conexion")
     private LocalDateTime ultimaConexion;
-
-    // --- MÉTODOS DE SPRING SECURITY ---
-
+    
+    @ManyToOne
+    @JoinColumn(name = "id_rol")
+    private Rol rol;
+    
+    //Atributos de auditoria
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -42,12 +45,12 @@ public class Usuario extends Auditable implements UserDetails {
 
     @Override
     public String getPassword() {
-        return this.password; // Mapeado a tu nuevo campo
+        return this.password; 
     }
 
     @Override
     public String getUsername() {
-        return this.correo; // Usaremos el correo como identificador
+        return this.correo; 
     }
 
     @Override
