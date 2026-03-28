@@ -3,6 +3,7 @@ package com.sw.api.controllers;
 import com.sw.api.dtos.AuthResponse;
 import com.sw.api.dtos.LoginRequest;
 import com.sw.api.dtos.RegisterRequest;
+import com.sw.api.dtos.RefreshTokenRequest;
 import com.sw.api.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -45,5 +46,10 @@ public class AuthController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
         return headers;
+    }
+    
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.actualizarToken(request));
     }
 }

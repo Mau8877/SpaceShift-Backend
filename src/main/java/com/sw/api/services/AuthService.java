@@ -3,6 +3,7 @@ package com.sw.api.services;
 import com.sw.api.dtos.AuthResponse;
 import com.sw.api.dtos.LoginRequest;
 import com.sw.api.dtos.RegisterRequest;
+import com.sw.api.dtos.RefreshTokenRequest;
 import com.sw.api.models.Usuario;
 import com.sw.api.models.Perfil;
 import com.sw.api.models.TipoPerfil;
@@ -25,6 +26,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.jsonwebtoken.ExpiredJwtException;
 
 @Service
 @RequiredArgsConstructor
@@ -103,9 +106,51 @@ public class AuthService {
         extraClaims.put("id", user.getId());
         extraClaims.put("nombre", perfil.getNombre());
         extraClaims.put("apellido", perfil.getApellido());
-        
+        String nombreRol = (user.getRol() != null) ? user.getRol().getNombre() : "SIN_ROL";
+        extraClaims.put("rol", nombreRol);
         // 5. Generar token
         var jwtToken = jwtService.generarToken(extraClaims, user);
         return new AuthResponse(jwtToken);
+    }
+    
+    public AuthResponse actualizarToken(RefreshTokenRequest request) {
+        String tokenViejo = request.token();
+        String correo = null;
+
+        try {
+            // Intentamos extraer el correo normalmente (por si el token aún no expira pero quieren uno nuevo)
+            correo = jwtService.extractUsername(tokenViejo);
+            
+        } catch (ExpiredJwtException e) {
+            // Si el token ya expiró, extraemos el correo directamente desde la excepción
+            correo = e.getClaims().getSubject();
+        } catch (Exception e) {
+            // Si es un token malformado o inventado, lo rebotamos
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token inválido o corrupto");
+        }
+
+        if (correo == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo extraer información del token");
+        }
+
+        // 1. Buscamos al usuario con ese correo
+        var user = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado en la base de datos"));
+
+        // 2. Buscamos su perfil actualizado
+        var perfil = perfilRepository.findByUsuario(user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil no encontrado"));
+
+        // 3. Armamos los datos (claims) frescos por si el administrador le cambió el rol o el nombre
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("id", user.getId());
+        extraClaims.put("nombre", perfil.getNombre());
+        extraClaims.put("apellido", perfil.getApellido());
+        String nombreRol = (user.getRol() != null) ? user.getRol().getNombre() : "SIN_ROL";
+        extraClaims.put("rol", nombreRol);
+
+        // 4. Generamos y devolvemos el nuevo token de acceso
+        var nuevoToken = jwtService.generarToken(extraClaims, user);
+        return new AuthResponse(nuevoToken);
     }
 }
