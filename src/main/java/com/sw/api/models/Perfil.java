@@ -19,12 +19,13 @@ public class Perfil {
     @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String apellido;
 
     private String fotoUrl;
 
-    // Relación 1 a 1 Unidireccional (Perfil sabe de Usuario, Usuario no sabe de Perfil)
+    // Relación 1 a 1 Unidireccional (Perfil sabe de Usuario, Usuario no sabe de
+    // Perfil)
     @OneToOne
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)
     private Usuario usuario;
