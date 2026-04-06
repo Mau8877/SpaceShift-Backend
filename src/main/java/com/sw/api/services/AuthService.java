@@ -53,7 +53,8 @@ public class AuthService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil inválido"));
 
         Rol rolPorDefecto = rolRepository.findByNombre("ROLE_USER")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Rol base no encontrado en la DB"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Rol base no encontrado en la DB"));
 
         // 3. Crear y guardar Usuario
         Usuario nuevoUsuario = new Usuario();
@@ -75,7 +76,7 @@ public class AuthService {
 
         perfilRepository.save(nuevoPerfil);
 
-        // 5. Armar los Custom Claims para el JWT 
+        // 5. Armar los Custom Claims para el JWT
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("id", usuarioGuardado.getId());
         extraClaims.put("nombre", nuevoPerfil.getNombre());
@@ -90,8 +91,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // 1. Verificar credenciales
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.correo(), request.password())
-        );
+                new UsernamePasswordAuthenticationToken(request.correo(), request.password()));
 
         // 2. Buscar Usuario
         var user = usuarioRepository.findByCorreo(request.correo())
@@ -101,7 +101,7 @@ public class AuthService {
         var perfil = perfilRepository.findByUsuario(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil no encontrado"));
 
-        // 4. Armar los Custom Claims para el JWT 
+        // 4. Armar los Custom Claims para el JWT
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("id", user.getId());
         extraClaims.put("nombre", perfil.getNombre());
@@ -112,15 +112,16 @@ public class AuthService {
         var jwtToken = jwtService.generarToken(extraClaims, user);
         return new AuthResponse(jwtToken);
     }
-    
+
     public AuthResponse actualizarToken(RefreshTokenRequest request) {
         String tokenViejo = request.token();
         String correo = null;
 
         try {
-            // Intentamos extraer el correo normalmente (por si el token aún no expira pero quieren uno nuevo)
+            // Intentamos extraer el correo normalmente (por si el token aún no expira pero
+            // quieren uno nuevo)
             correo = jwtService.extractUsername(tokenViejo);
-            
+
         } catch (ExpiredJwtException e) {
             // Si el token ya expiró, extraemos el correo directamente desde la excepción
             correo = e.getClaims().getSubject();
@@ -135,13 +136,15 @@ public class AuthService {
 
         // 1. Buscamos al usuario con ese correo
         var user = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado en la base de datos"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado en la base de datos"));
 
         // 2. Buscamos su perfil actualizado
         var perfil = perfilRepository.findByUsuario(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil no encontrado"));
 
-        // 3. Armamos los datos (claims) frescos por si el administrador le cambió el rol o el nombre
+        // 3. Armamos los datos (claims) frescos por si el administrador le cambió el
+        // rol o el nombre
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("id", user.getId());
         extraClaims.put("nombre", perfil.getNombre());
