@@ -1,5 +1,7 @@
 package com.sw.api.security;
 
+import org.springframework.http.HttpMethod;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +33,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Dejamos públicas las rutas de registro, login y la documentación de Swagger
                         .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                        .permitAll()
+                        // Permitimos ver publicaciones e inmuebles sin estar logueado
+                        .requestMatchers(HttpMethod.GET, "/api/publicaciones/**", "/api/inmuebles/**")
                         .permitAll()
                         // Cualquier otra petición a la API exigirá un token válido
                         .anyRequest().authenticated())
