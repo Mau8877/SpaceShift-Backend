@@ -46,6 +46,4 @@ Asegúrate de tener instalado PostgreSQL y de haber creado la base de datos que 
 El servidor iniciará por defecto en el puerto 8081.
 
 📖 Documentación de la API (Swagger)
-Una vez que el servidor esté corriendo, puedes probar todos los endpoints y ver la documentación interactiva en:
-
-👉 http://localhost:8081/swagger-ui/index.html
+Una vez que el servidor esté corriendo

@@ -32,7 +32,7 @@ public class SecurityConfig {
                 // 2. Configuramos las reglas de acceso a las rutas (Endpoints)
                 .authorizeHttpRequests(auth -> auth
                         // Dejamos públicas las rutas de registro, login y la documentación de Swagger
-                        .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                        .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/ws-chat/**")
                         .permitAll()
                         // Permitimos ver publicaciones e inmuebles sin estar logueado
                         .requestMatchers(HttpMethod.GET, "/api/publicaciones/**", "/api/inmuebles/**")
