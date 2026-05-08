@@ -11,6 +11,7 @@ import com.sw.api.modules.usuario.model.Rol;
 import com.sw.api.modules.usuario.repository.UsuarioRepository;
 import com.sw.api.modules.usuario.repository.PerfilRepository;
 import com.sw.api.modules.usuario.repository.TipoPerfilRepository;
+import com.sw.api.modules.usuario.model.NombreRol;
 import com.sw.api.modules.usuario.repository.RolRepository;
 import com.sw.api.security.JwtService;
 
@@ -50,7 +51,7 @@ public class AuthService {
         TipoPerfil tipoSeleccionado = tipoPerfilRepository.findByNombre(request.tipoPerfil())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil inválido"));
 
-        Rol rolPorDefecto = rolRepository.findByNombre("ROLE_USER")
+        Rol rolPorDefecto = rolRepository.findByNombre(NombreRol.ROLE_USER.name())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Rol base no encontrado en la DB"));
 

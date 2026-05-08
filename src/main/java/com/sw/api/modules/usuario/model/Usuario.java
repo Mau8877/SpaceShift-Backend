@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.sw.api.shared.model.Auditable;
+import com.sw.api.modules.usuario.model.NombreRol;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -39,7 +40,10 @@ public class Usuario extends Auditable implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        if (rol == null) {
+            return List.of(new SimpleGrantedAuthority(NombreRol.ROLE_USER.name()));
+        }
+        return List.of(new SimpleGrantedAuthority(rol.getNombre()));
     }
 
     @Override
