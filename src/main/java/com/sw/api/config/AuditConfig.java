@@ -1,6 +1,6 @@
 package com.sw.api.config;
 
-import com.sw.api.models.Usuario;
+import com.sw.api.modules.usuario.model.Usuario;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
