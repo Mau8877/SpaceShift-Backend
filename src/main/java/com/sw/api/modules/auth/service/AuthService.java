@@ -1,21 +1,9 @@
 package com.sw.api.modules.auth.service;
 
-import com.sw.api.modules.auth.dto.AuthResponse;
-import com.sw.api.modules.auth.dto.LoginRequest;
-import com.sw.api.modules.auth.dto.RegisterRequest;
-import com.sw.api.modules.auth.dto.RefreshTokenRequest;
-import com.sw.api.modules.usuario.model.Usuario;
-import com.sw.api.modules.usuario.model.Perfil;
-import com.sw.api.modules.usuario.model.TipoPerfil;
-import com.sw.api.modules.usuario.model.Rol;
-import com.sw.api.modules.usuario.repository.UsuarioRepository;
-import com.sw.api.modules.usuario.repository.PerfilRepository;
-import com.sw.api.modules.usuario.repository.TipoPerfilRepository;
-import com.sw.api.modules.usuario.model.NombreRol;
-import com.sw.api.modules.usuario.repository.RolRepository;
-import com.sw.api.security.JwtService;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,11 +12,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import com.sw.api.modules.auth.dto.AuthResponse;
+import com.sw.api.modules.auth.dto.LoginRequest;
+import com.sw.api.modules.auth.dto.RefreshTokenRequest;
+import com.sw.api.modules.auth.dto.RegisterRequest;
+import com.sw.api.modules.usuario.enums.NombreRol;
+import com.sw.api.modules.usuario.enums.NombreTipoPerfil;
+import com.sw.api.modules.usuario.model.Perfil;
+import com.sw.api.modules.usuario.model.Rol;
+import com.sw.api.modules.usuario.model.TipoPerfil;
+import com.sw.api.modules.usuario.model.Usuario;
+import com.sw.api.modules.usuario.repository.PerfilRepository;
+import com.sw.api.modules.usuario.repository.RolRepository;
+import com.sw.api.modules.usuario.repository.TipoPerfilRepository;
+import com.sw.api.modules.usuario.repository.UsuarioRepository;
+import com.sw.api.security.JwtService;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -45,11 +46,18 @@ public class AuthService {
     @Transactional
     public AuthResponse registrar(RegisterRequest request) {
         if (usuarioRepository.findByCorreo(request.correo()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo ya está registrado");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo ya estÃ¡ registrado");
         }
 
-        TipoPerfil tipoSeleccionado = tipoPerfilRepository.findByNombre(request.tipoPerfil())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil inválido"));
+        NombreTipoPerfil nombreTipoPerfil;
+        try {
+            nombreTipoPerfil = NombreTipoPerfil.valueOf(request.tipoPerfil().trim().toUpperCase());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil invalido");
+        }
+
+        TipoPerfil tipoSeleccionado = tipoPerfilRepository.findByNombre(nombreTipoPerfil)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil invalido"));
 
         Rol rolPorDefecto = rolRepository.findByNombre(NombreRol.ROLE_USER.name())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -113,11 +121,11 @@ public class AuthService {
         } catch (ExpiredJwtException e) {
             correo = e.getClaims().getSubject();
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token inválido o corrupto");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invÃ¡lido o corrupto");
         }
 
         if (correo == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo extraer información del token");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo extraer informaciÃ³n del token");
         }
 
         var user = usuarioRepository.findByCorreo(correo)
@@ -138,3 +146,4 @@ public class AuthService {
         return new AuthResponse(nuevoToken);
     }
 }
+

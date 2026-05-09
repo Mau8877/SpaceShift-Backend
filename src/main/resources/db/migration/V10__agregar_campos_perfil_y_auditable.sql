@@ -1,0 +1,3 @@
+ALTER TABLE perfil
+    ADD COLUMN IF NOT EXISTS telefono VARCHAR(30),
+    ADD COLUMN IF NOT EXISTS descripcion TEXT;

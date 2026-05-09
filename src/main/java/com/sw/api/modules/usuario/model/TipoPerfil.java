@@ -1,5 +1,6 @@
 package com.sw.api.modules.usuario.model;
 
+import com.sw.api.modules.usuario.enums.NombreTipoPerfil;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
@@ -16,6 +17,7 @@ public class TipoPerfil {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private String nombre;
+    private NombreTipoPerfil nombre;
 }
