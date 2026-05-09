@@ -7,21 +7,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "contrato")
-public class Contrato {
+public class Contrato extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -71,14 +69,4 @@ public class Contrato {
 
     @Column(columnDefinition = "TEXT")
     private String observacion;
-
-    @Column(name = "creado_en", nullable = false)
-    private LocalDateTime creadoEn;
-
-    @PrePersist
-    public void prePersist() {
-        if (creadoEn == null) {
-            creadoEn = LocalDateTime.now();
-        }
-    }
 }
