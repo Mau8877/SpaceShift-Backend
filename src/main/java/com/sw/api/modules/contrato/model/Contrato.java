@@ -13,6 +13,7 @@ import lombok.Setter;
 import com.sw.api.modules.inmueble.model.Inmueble;
 import com.sw.api.modules.publicacion.model.Publicacion;
 import com.sw.api.modules.usuario.model.Usuario;
+import com.sw.api.shared.model.Auditable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

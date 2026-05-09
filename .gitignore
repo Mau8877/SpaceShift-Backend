@@ -40,3 +40,5 @@ src/main/resources/application.properties
 .env
 .claude/
 plan_back_chat.md
+
+schema_creacion_tablas.sql

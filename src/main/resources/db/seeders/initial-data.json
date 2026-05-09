@@ -1,0 +1,942 @@
+{
+    "roles": [
+        "ROLE_USER",
+        "ROLE_ADMIN"
+    ],
+    "tiposPerfil": [
+        "EMPRESA",
+        "PERSONAL"
+    ],
+    "usuarios": [
+        {
+            "correo": "admin@spaceshift.com",
+            "password": "123456",
+            "rol": "ROLE_ADMIN",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Admin",
+            "apellido": "SpaceShift",
+            "telefono": "70000001",
+            "descripcion": "Administrador principal de la plataforma SpaceShift.",
+            "publicaciones": [
+                {
+                    "titulo": "Casa familiar en Equipetrol",
+                    "descripcionGeneral": "Casa amplia ubicada en una zona residencial, ideal para familia.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 185000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Familiar",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 360,
+                        "areaConstruida": 240,
+                        "habitaciones": 4,
+                        "banos": 3,
+                        "garajes": 2,
+                        "antiguedadAnios": 8
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Equipetrol",
+                        "direccionExacta": "Av. San Martin, zona Equipetrol",
+                        "latitud": "-17.7678",
+                        "longitud": "-63.1969"
+                    }
+                },
+                {
+                    "titulo": "Departamento moderno cerca del centro",
+                    "descripcionGeneral": "Departamento cómodo con excelente ubicación y acceso rápido a servicios.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 550,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Moderno",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 95,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 4
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Centro",
+                        "direccionExacta": "Calle Libertad, zona centro",
+                        "latitud": "-17.7833",
+                        "longitud": "-63.1821"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "contacto@andesinmobiliaria.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "EMPRESA",
+            "nombre": "Andes Inmobiliaria",
+            "apellido": null,
+            "telefono": "70000002",
+            "descripcion": "Empresa inmobiliaria dedicada a la venta y alquiler de casas, departamentos y terrenos en Bolivia.",
+            "publicaciones": [
+                {
+                    "titulo": "Terreno urbano en Urubó",
+                    "descripcionGeneral": "Terreno amplio en zona de alta plusvalía, ideal para proyecto residencial.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 95000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Terreno+Urbano",
+                    "inmueble": {
+                        "tipoInmueble": "TERRENO",
+                        "areaTerreno": 720,
+                        "areaConstruida": 0,
+                        "habitaciones": 0,
+                        "banos": 0,
+                        "garajes": 0,
+                        "antiguedadAnios": 0
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Urubó",
+                        "direccionExacta": "Zona Urubó, cerca del puente",
+                        "latitud": "-17.7581",
+                        "longitud": "-63.2476"
+                    }
+                },
+                {
+                    "titulo": "Oficina empresarial en Equipetrol Norte",
+                    "descripcionGeneral": "Oficina moderna para empresa, con parqueo y ambientes funcionales.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 900,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Oficina+Empresarial",
+                    "inmueble": {
+                        "tipoInmueble": "OFICINA",
+                        "areaTerreno": 0,
+                        "areaConstruida": 120,
+                        "habitaciones": 4,
+                        "banos": 2,
+                        "garajes": 2,
+                        "antiguedadAnios": 3
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Equipetrol Norte",
+                        "direccionExacta": "Av. Ovidio Barbery",
+                        "latitud": "-17.7559",
+                        "longitud": "-63.2015"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "ventas@urbana360.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "EMPRESA",
+            "nombre": "Urbana 360",
+            "apellido": null,
+            "telefono": "70000003",
+            "descripcion": "Inmobiliaria especializada en propiedades urbanas, departamentos modernos y oficinas comerciales.",
+            "publicaciones": [
+                {
+                    "titulo": "Penthouse con terraza privada",
+                    "descripcionGeneral": "Penthouse elegante con terraza, vista panorámica y acabados premium.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 245000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Penthouse",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 180,
+                        "habitaciones": 4,
+                        "banos": 4,
+                        "garajes": 2,
+                        "antiguedadAnios": 2
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Las Palmas",
+                        "direccionExacta": "Condominio privado Las Palmas",
+                        "latitud": "-17.8029",
+                        "longitud": "-63.2218"
+                    }
+                },
+                {
+                    "titulo": "Local comercial en avenida principal",
+                    "descripcionGeneral": "Local comercial con excelente visibilidad, ideal para negocio o showroom.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 1200,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Local+Comercial",
+                    "inmueble": {
+                        "tipoInmueble": "LOCAL_COMERCIAL",
+                        "areaTerreno": 0,
+                        "areaConstruida": 150,
+                        "habitaciones": 2,
+                        "banos": 2,
+                        "garajes": 3,
+                        "antiguedadAnios": 5
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Av. Banzer",
+                        "direccionExacta": "Av. Banzer entre 3er y 4to anillo",
+                        "latitud": "-17.7402",
+                        "longitud": "-63.1819"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "info@casasdeleste.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "EMPRESA",
+            "nombre": "Casas del Este",
+            "apellido": null,
+            "telefono": "70000004",
+            "descripcion": "Empresa inmobiliaria enfocada en casas familiares, condominios y propiedades residenciales.",
+            "publicaciones": [
+                {
+                    "titulo": "Casa en condominio privado zona Este",
+                    "descripcionGeneral": "Casa de dos plantas en condominio cerrado con áreas comunes.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 165000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Condominio",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 300,
+                        "areaConstruida": 210,
+                        "habitaciones": 4,
+                        "banos": 3,
+                        "garajes": 2,
+                        "antiguedadAnios": 6
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Zona Este",
+                        "direccionExacta": "Condominio privado zona Este",
+                        "latitud": "-17.7835",
+                        "longitud": "-63.1329"
+                    }
+                },
+                {
+                    "titulo": "Casa económica en Plan 3000",
+                    "descripcionGeneral": "Casa funcional con buen acceso a transporte y servicios cercanos.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 58000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Economica",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 250,
+                        "areaConstruida": 130,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 10
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Plan 3000",
+                        "direccionExacta": "Barrio residencial Plan 3000",
+                        "latitud": "-17.8445",
+                        "longitud": "-63.1488"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "contacto@centropropiedades.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "EMPRESA",
+            "nombre": "Centro Propiedades",
+            "apellido": null,
+            "telefono": "70000005",
+            "descripcion": "Inmobiliaria dedicada a propiedades céntricas, locales comerciales y departamentos en alquiler.",
+            "publicaciones": [
+                {
+                    "titulo": "Departamento amoblado en Sopocachi",
+                    "descripcionGeneral": "Departamento amoblado ideal para estudiantes o profesionales.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 480,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Amoblado",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 80,
+                        "habitaciones": 2,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 7
+                    },
+                    "ubicacion": {
+                        "ciudad": "La Paz",
+                        "zonaBarrios": "Sopocachi",
+                        "direccionExacta": "Calle Ecuador, Sopocachi",
+                        "latitud": "-16.5102",
+                        "longitud": "-68.1254"
+                    }
+                },
+                {
+                    "titulo": "Local comercial en zona central La Paz",
+                    "descripcionGeneral": "Local ubicado en zona de alto flujo peatonal.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 700,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Local+Central",
+                    "inmueble": {
+                        "tipoInmueble": "LOCAL_COMERCIAL",
+                        "areaTerreno": 0,
+                        "areaConstruida": 90,
+                        "habitaciones": 1,
+                        "banos": 1,
+                        "garajes": 0,
+                        "antiguedadAnios": 12
+                    },
+                    "ubicacion": {
+                        "ciudad": "La Paz",
+                        "zonaBarrios": "Centro",
+                        "direccionExacta": "Av. Camacho, zona central",
+                        "latitud": "-16.4990",
+                        "longitud": "-68.1334"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "maria.gutierrez@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "María",
+            "apellido": "Gutiérrez",
+            "telefono": "70000006",
+            "descripcion": "Propietaria independiente con inmuebles disponibles para venta y alquiler.",
+            "publicaciones": [
+                {
+                    "titulo": "Monoambiente en Cala Cala",
+                    "descripcionGeneral": "Monoambiente cómodo, ideal para estudiante o persona independiente.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 250,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Monoambiente",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 45,
+                        "habitaciones": 1,
+                        "banos": 1,
+                        "garajes": 0,
+                        "antiguedadAnios": 3
+                    },
+                    "ubicacion": {
+                        "ciudad": "Cochabamba",
+                        "zonaBarrios": "Cala Cala",
+                        "direccionExacta": "Av. América Oeste",
+                        "latitud": "-17.3711",
+                        "longitud": "-66.1628"
+                    }
+                },
+                {
+                    "titulo": "Casa pequeña en Tiquipaya",
+                    "descripcionGeneral": "Casa acogedora con patio, ideal para familia pequeña.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 72000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Tiquipaya",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 280,
+                        "areaConstruida": 140,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 9
+                    },
+                    "ubicacion": {
+                        "ciudad": "Cochabamba",
+                        "zonaBarrios": "Tiquipaya",
+                        "direccionExacta": "Zona residencial Tiquipaya",
+                        "latitud": "-17.3373",
+                        "longitud": "-66.2182"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "jorge.rivero@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Jorge",
+            "apellido": "Rivero",
+            "telefono": "70000007",
+            "descripcion": "Usuario propietario de inmuebles residenciales.",
+            "publicaciones": [
+                {
+                    "titulo": "Departamento en Miraflores",
+                    "descripcionGeneral": "Departamento ubicado cerca de hospitales, universidades y transporte.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 98000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Miraflores",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 100,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 11
+                    },
+                    "ubicacion": {
+                        "ciudad": "La Paz",
+                        "zonaBarrios": "Miraflores",
+                        "direccionExacta": "Av. Saavedra, Miraflores",
+                        "latitud": "-16.5017",
+                        "longitud": "-68.1194"
+                    }
+                },
+                {
+                    "titulo": "Garzonier en San Miguel",
+                    "descripcionGeneral": "Garzonier moderno en zona comercial y segura.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 320,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Garzonier",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 50,
+                        "habitaciones": 1,
+                        "banos": 1,
+                        "garajes": 0,
+                        "antiguedadAnios": 2
+                    },
+                    "ubicacion": {
+                        "ciudad": "La Paz",
+                        "zonaBarrios": "San Miguel",
+                        "direccionExacta": "Calle 21 de San Miguel",
+                        "latitud": "-16.5414",
+                        "longitud": "-68.0789"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "ana.lopez@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Ana",
+            "apellido": "López",
+            "telefono": "70000008",
+            "descripcion": "Propietaria independiente interesada en alquilar inmuebles familiares.",
+            "publicaciones": [
+                {
+                    "titulo": "Casa amplia en Sirari",
+                    "descripcionGeneral": "Casa espaciosa con jardín y garaje doble.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 1100,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Sirari",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 420,
+                        "areaConstruida": 280,
+                        "habitaciones": 5,
+                        "banos": 4,
+                        "garajes": 2,
+                        "antiguedadAnios": 7
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Sirari",
+                        "direccionExacta": "Barrio Sirari",
+                        "latitud": "-17.7598",
+                        "longitud": "-63.1983"
+                    }
+                },
+                {
+                    "titulo": "Departamento familiar en Hamacas",
+                    "descripcionGeneral": "Departamento con buena distribución en zona tranquila.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 125000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Hamacas",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 115,
+                        "habitaciones": 3,
+                        "banos": 3,
+                        "garajes": 2,
+                        "antiguedadAnios": 5
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Hamacas",
+                        "direccionExacta": "Zona Hamacas",
+                        "latitud": "-17.7245",
+                        "longitud": "-63.1709"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "carlos.mendez@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Carlos",
+            "apellido": "Méndez",
+            "telefono": "70000009",
+            "descripcion": "Usuario particular con terrenos e inmuebles en venta.",
+            "publicaciones": [
+                {
+                    "titulo": "Terreno en Cotoca",
+                    "descripcionGeneral": "Terreno ideal para vivienda o inversión a futuro.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 35000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Terreno+Cotoca",
+                    "inmueble": {
+                        "tipoInmueble": "TERRENO",
+                        "areaTerreno": 500,
+                        "areaConstruida": 0,
+                        "habitaciones": 0,
+                        "banos": 0,
+                        "garajes": 0,
+                        "antiguedadAnios": 0
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Cotoca",
+                        "direccionExacta": "Zona urbana Cotoca",
+                        "latitud": "-17.7546",
+                        "longitud": "-62.9975"
+                    }
+                },
+                {
+                    "titulo": "Casa con tienda en Villa Primero de Mayo",
+                    "descripcionGeneral": "Casa con ambiente comercial al frente, ideal para negocio familiar.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 69000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+con+Tienda",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 260,
+                        "areaConstruida": 160,
+                        "habitaciones": 4,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 13
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Villa Primero de Mayo",
+                        "direccionExacta": "Av. principal Villa Primero de Mayo",
+                        "latitud": "-17.8009",
+                        "longitud": "-63.1325"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "lucia.rojas@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Lucía",
+            "apellido": "Rojas",
+            "telefono": "70000010",
+            "descripcion": "Propietaria de departamentos en alquiler.",
+            "publicaciones": [
+                {
+                    "titulo": "Departamento céntrico en Cochabamba",
+                    "descripcionGeneral": "Departamento cerca de comercios, universidades y transporte público.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 420,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Centro",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 85,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 6
+                    },
+                    "ubicacion": {
+                        "ciudad": "Cochabamba",
+                        "zonaBarrios": "Centro",
+                        "direccionExacta": "Av. Heroínas",
+                        "latitud": "-17.3895",
+                        "longitud": "-66.1568"
+                    }
+                },
+                {
+                    "titulo": "Habitación independiente en Queru Queru",
+                    "descripcionGeneral": "Habitación independiente con baño privado, ideal para estudiante.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 150,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Habitacion",
+                    "inmueble": {
+                        "tipoInmueble": "HABITACION",
+                        "areaTerreno": 0,
+                        "areaConstruida": 30,
+                        "habitaciones": 1,
+                        "banos": 1,
+                        "garajes": 0,
+                        "antiguedadAnios": 4
+                    },
+                    "ubicacion": {
+                        "ciudad": "Cochabamba",
+                        "zonaBarrios": "Queru Queru",
+                        "direccionExacta": "Zona Queru Queru",
+                        "latitud": "-17.3719",
+                        "longitud": "-66.1502"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "diego.suarez@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Diego",
+            "apellido": "Suárez",
+            "telefono": "70000011",
+            "descripcion": "Usuario particular con propiedades residenciales.",
+            "publicaciones": [
+                {
+                    "titulo": "Casa en Achumani",
+                    "descripcionGeneral": "Casa familiar en zona residencial tranquila.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 210000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Achumani",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 340,
+                        "areaConstruida": 250,
+                        "habitaciones": 4,
+                        "banos": 4,
+                        "garajes": 2,
+                        "antiguedadAnios": 9
+                    },
+                    "ubicacion": {
+                        "ciudad": "La Paz",
+                        "zonaBarrios": "Achumani",
+                        "direccionExacta": "Zona Achumani",
+                        "latitud": "-16.5368",
+                        "longitud": "-68.0719"
+                    }
+                },
+                {
+                    "titulo": "Departamento en Obrajes",
+                    "descripcionGeneral": "Departamento con buena iluminación y ubicación estratégica.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 600,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Obrajes",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 105,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 8
+                    },
+                    "ubicacion": {
+                        "ciudad": "La Paz",
+                        "zonaBarrios": "Obrajes",
+                        "direccionExacta": "Av. 14 de Septiembre",
+                        "latitud": "-16.5233",
+                        "longitud": "-68.1104"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "sofia.molina@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Sofía",
+            "apellido": "Molina",
+            "telefono": "70000012",
+            "descripcion": "Propietaria independiente con inmuebles en Santa Cruz.",
+            "publicaciones": [
+                {
+                    "titulo": "Departamento en zona Norte",
+                    "descripcionGeneral": "Departamento moderno en edificio con seguridad y parqueo.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 105000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Norte",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 98,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 3
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Zona Norte",
+                        "direccionExacta": "Av. Banzer, zona Norte",
+                        "latitud": "-17.7288",
+                        "longitud": "-63.1762"
+                    }
+                },
+                {
+                    "titulo": "Casa quinta en Warnes",
+                    "descripcionGeneral": "Casa quinta ideal para descanso familiar o inversión.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 130000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Quinta",
+                    "inmueble": {
+                        "tipoInmueble": "CASA_QUINTA",
+                        "areaTerreno": 1200,
+                        "areaConstruida": 220,
+                        "habitaciones": 4,
+                        "banos": 3,
+                        "garajes": 4,
+                        "antiguedadAnios": 6
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Warnes",
+                        "direccionExacta": "Carretera al norte, zona Warnes",
+                        "latitud": "-17.5083",
+                        "longitud": "-63.1673"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "pablo.vargas@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Pablo",
+            "apellido": "Vargas",
+            "telefono": "70000013",
+            "descripcion": "Propietario particular de inmuebles urbanos.",
+            "publicaciones": [
+                {
+                    "titulo": "Local pequeño para emprendimiento",
+                    "descripcionGeneral": "Local económico ideal para tienda, oficina pequeña o emprendimiento.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 300,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Local+Pequeno",
+                    "inmueble": {
+                        "tipoInmueble": "LOCAL_COMERCIAL",
+                        "areaTerreno": 0,
+                        "areaConstruida": 55,
+                        "habitaciones": 1,
+                        "banos": 1,
+                        "garajes": 0,
+                        "antiguedadAnios": 10
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Los Pozos",
+                        "direccionExacta": "Zona Los Pozos",
+                        "latitud": "-17.7791",
+                        "longitud": "-63.1759"
+                    }
+                },
+                {
+                    "titulo": "Casa en barrio residencial El Bajío",
+                    "descripcionGeneral": "Casa cómoda con patio y buena distribución.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 88000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Bajio",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 300,
+                        "areaConstruida": 170,
+                        "habitaciones": 3,
+                        "banos": 2,
+                        "garajes": 2,
+                        "antiguedadAnios": 8
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "El Bajío",
+                        "direccionExacta": "Zona El Bajío",
+                        "latitud": "-17.8128",
+                        "longitud": "-63.2169"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "gabriela.torrez@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Gabriela",
+            "apellido": "Torrez",
+            "telefono": "70000014",
+            "descripcion": "Usuario particular con departamentos en alquiler.",
+            "publicaciones": [
+                {
+                    "titulo": "Departamento para pareja en Recoleta",
+                    "descripcionGeneral": "Departamento pequeño y cómodo en zona tranquila.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 350,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Recoleta",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 65,
+                        "habitaciones": 2,
+                        "banos": 1,
+                        "garajes": 1,
+                        "antiguedadAnios": 5
+                    },
+                    "ubicacion": {
+                        "ciudad": "Cochabamba",
+                        "zonaBarrios": "Recoleta",
+                        "direccionExacta": "Zona Recoleta",
+                        "latitud": "-17.3737",
+                        "longitud": "-66.1545"
+                    }
+                },
+                {
+                    "titulo": "Casa familiar en Sacaba",
+                    "descripcionGeneral": "Casa familiar con patio y ambientes amplios.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 79000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Casa+Sacaba",
+                    "inmueble": {
+                        "tipoInmueble": "CASA",
+                        "areaTerreno": 320,
+                        "areaConstruida": 180,
+                        "habitaciones": 4,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 11
+                    },
+                    "ubicacion": {
+                        "ciudad": "Cochabamba",
+                        "zonaBarrios": "Sacaba",
+                        "direccionExacta": "Zona residencial Sacaba",
+                        "latitud": "-17.3976",
+                        "longitud": "-66.0383"
+                    }
+                }
+            ]
+        },
+        {
+            "correo": "fernando.quiroga@mail.com",
+            "password": "123456",
+            "rol": "ROLE_USER",
+            "tipoPerfil": "PERSONAL",
+            "nombre": "Fernando",
+            "apellido": "Quiroga",
+            "telefono": "70000015",
+            "descripcion": "Propietario independiente interesado en vender y alquilar propiedades.",
+            "publicaciones": [
+                {
+                    "titulo": "Terreno amplio en Porongo",
+                    "descripcionGeneral": "Terreno amplio con potencial para vivienda o casa quinta.",
+                    "tipoTransaccion": "VENTA",
+                    "precio": 62000,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Terreno+Porongo",
+                    "inmueble": {
+                        "tipoInmueble": "TERRENO",
+                        "areaTerreno": 900,
+                        "areaConstruida": 0,
+                        "habitaciones": 0,
+                        "banos": 0,
+                        "garajes": 0,
+                        "antiguedadAnios": 0
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Porongo",
+                        "direccionExacta": "Zona Porongo",
+                        "latitud": "-17.7387",
+                        "longitud": "-63.3025"
+                    }
+                },
+                {
+                    "titulo": "Departamento ejecutivo en Equipetrol",
+                    "descripcionGeneral": "Departamento ideal para ejecutivo, con parqueo y seguridad.",
+                    "tipoTransaccion": "ALQUILER",
+                    "precio": 650,
+                    "moneda": "USD",
+                    "estadoPublicacion": "ACTIVO",
+                    "imagenUrl": "https://placehold.co/1200x800/png?text=Departamento+Ejecutivo",
+                    "inmueble": {
+                        "tipoInmueble": "DEPARTAMENTO",
+                        "areaTerreno": 0,
+                        "areaConstruida": 90,
+                        "habitaciones": 2,
+                        "banos": 2,
+                        "garajes": 1,
+                        "antiguedadAnios": 2
+                    },
+                    "ubicacion": {
+                        "ciudad": "Santa Cruz",
+                        "zonaBarrios": "Equipetrol",
+                        "direccionExacta": "Av. San Martín, Equipetrol",
+                        "latitud": "-17.7666",
+                        "longitud": "-63.1972"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,5 +1,6 @@
 package com.sw.api.modules.usuario.model;
 
+import com.sw.api.shared.model.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
@@ -10,7 +11,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Perfil {
+public class Perfil extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -23,6 +24,12 @@ public class Perfil {
     private String apellido;
 
     private String fotoUrl;
+
+    @Column(length = 30)
+    private String telefono;
+
+    @Column(columnDefinition = "TEXT")
+    private String descripcion;
 
     @OneToOne
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)

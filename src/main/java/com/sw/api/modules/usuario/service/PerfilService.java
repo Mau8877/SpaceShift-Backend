@@ -2,6 +2,7 @@ package com.sw.api.modules.usuario.service;
 
 import com.sw.api.modules.usuario.dto.PerfilPatchRequestDTO;
 import com.sw.api.modules.usuario.dto.PerfilResponseDTO;
+import com.sw.api.modules.usuario.enums.NombreTipoPerfil;
 import com.sw.api.modules.usuario.model.Perfil;
 import com.sw.api.modules.usuario.model.TipoPerfil;
 import com.sw.api.modules.usuario.model.Usuario;
@@ -34,26 +35,30 @@ public class PerfilService {
         return new PerfilResponseDTO(
                 usuario.getCorreo(),
                 usuario.isEstadoConexion(),
-                perfil.getTipoPerfil().getNombre(),
+                perfil.getTipoPerfil().getNombre().name(),
                 perfil.getNombre(),
                 perfil.getApellido(),
-                perfil.getFotoUrl());
+                perfil.getFotoUrl(),
+                perfil.getTelefono(),
+                perfil.getDescripcion());
     }
 
     public PerfilResponseDTO obtenerPerfilPorIdUsuario(UUID idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        Perfil perfil = perfilRepository.findByUsuario(usuario)
+        Perfil perfil = perfilRepository.findByUsuarioId(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil no encontrado"));
 
         return new PerfilResponseDTO(
                 usuario.getCorreo(),
                 usuario.isEstadoConexion(),
-                perfil.getTipoPerfil().getNombre(),
+                perfil.getTipoPerfil().getNombre().name(),
                 perfil.getNombre(),
                 perfil.getApellido(),
-                perfil.getFotoUrl());
+                perfil.getFotoUrl(),
+                perfil.getTelefono(),
+                perfil.getDescripcion());
     }
 
     @Transactional
@@ -73,7 +78,7 @@ public class PerfilService {
             usuarioRepository.findByCorreo(request.correo())
                     .filter(existente -> !existente.getId().equals(usuarioAutenticado.getId()))
                     .ifPresent(existente -> {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo ya está registrado");
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo ya esta registrado");
                     });
             usuarioAutenticado.setCorreo(request.correo());
         }
@@ -94,9 +99,24 @@ public class PerfilService {
             perfil.setFotoUrl(request.fotoUrl());
         }
 
+        if (request.telefono() != null) {
+            perfil.setTelefono(request.telefono());
+        }
+
+        if (request.descripcion() != null) {
+            perfil.setDescripcion(request.descripcion());
+        }
+
         if (request.tipoPerfil() != null && !request.tipoPerfil().isBlank()) {
-            TipoPerfil tipoPerfil = tipoPerfilRepository.findByNombre(request.tipoPerfil())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil inválido"));
+            NombreTipoPerfil nombreTipoPerfil;
+            try {
+                nombreTipoPerfil = NombreTipoPerfil.valueOf(request.tipoPerfil().trim().toUpperCase());
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil invalido");
+            }
+
+            TipoPerfil tipoPerfil = tipoPerfilRepository.findByNombre(nombreTipoPerfil)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de perfil invalido"));
             perfil.setTipoPerfil(tipoPerfil);
         }
 
@@ -106,9 +126,11 @@ public class PerfilService {
         return new PerfilResponseDTO(
                 usuarioAutenticado.getCorreo(),
                 usuarioAutenticado.isEstadoConexion(),
-                perfil.getTipoPerfil().getNombre(),
+                perfil.getTipoPerfil().getNombre().name(),
                 perfil.getNombre(),
                 perfil.getApellido(),
-                perfil.getFotoUrl());
+                perfil.getFotoUrl(),
+                perfil.getTelefono(),
+                perfil.getDescripcion());
     }
 }
