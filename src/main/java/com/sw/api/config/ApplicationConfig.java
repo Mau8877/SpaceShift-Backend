@@ -1,6 +1,6 @@
 package com.sw.api.config;
 
-import com.sw.api.repositories.UsuarioRepository;
+import com.sw.api.modules.usuario.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
