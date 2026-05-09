@@ -1,9 +1,12 @@
 package com.sw.api.modules.auth.service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sw.api.modules.auth.dto.*;
+import com.sw.api.shared.service.EmailService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,10 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.sw.api.modules.auth.dto.AuthResponse;
-import com.sw.api.modules.auth.dto.LoginRequest;
-import com.sw.api.modules.auth.dto.RefreshTokenRequest;
-import com.sw.api.modules.auth.dto.RegisterRequest;
 import com.sw.api.modules.usuario.enums.NombreRol;
 import com.sw.api.modules.usuario.enums.NombreTipoPerfil;
 import com.sw.api.modules.usuario.model.Perfil;
