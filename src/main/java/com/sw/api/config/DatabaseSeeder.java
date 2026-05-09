@@ -32,7 +32,7 @@ public class DatabaseSeeder implements ApplicationRunner {
     private final ResourceLoader resourceLoader;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.seed.file:classpath:seeders/initial-data.json}")
+    @Value("${app.seed.file:classpath:db/seeders/initial-data.json}")
     private String seedFile;
 
     @Override
