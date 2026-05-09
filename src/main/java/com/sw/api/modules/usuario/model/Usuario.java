@@ -34,6 +34,12 @@ public class Usuario extends Auditable implements UserDetails {
     @Column(name = "ultima_conexion")
     private LocalDateTime ultimaConexion;
 
+    @Column(name = "codigo_recuperacion")
+    private String codigoRecuperacion;
+
+    @Column(name = "expiracion_codigo_recuperacion")
+    private LocalDateTime expiracionCodigoRecuperacion;
+
     @ManyToOne
     @JoinColumn(name = "id_rol")
     private Rol rol;

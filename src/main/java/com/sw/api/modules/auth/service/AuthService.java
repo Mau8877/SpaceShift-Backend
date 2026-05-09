@@ -4,6 +4,10 @@ import com.sw.api.modules.auth.dto.AuthResponse;
 import com.sw.api.modules.auth.dto.LoginRequest;
 import com.sw.api.modules.auth.dto.RegisterRequest;
 import com.sw.api.modules.auth.dto.RefreshTokenRequest;
+import com.sw.api.modules.auth.dto.RecuperarPasswordRequest;
+import com.sw.api.modules.auth.dto.ValidarCodigoRequest;
+import com.sw.api.modules.auth.dto.CambiarPasswordRequest;
+import com.sw.api.modules.auth.dto.MensajeResponse;
 import com.sw.api.modules.usuario.model.Usuario;
 import com.sw.api.modules.usuario.model.Perfil;
 import com.sw.api.modules.usuario.model.TipoPerfil;
@@ -14,6 +18,7 @@ import com.sw.api.modules.usuario.repository.TipoPerfilRepository;
 import com.sw.api.modules.usuario.model.NombreRol;
 import com.sw.api.modules.usuario.repository.RolRepository;
 import com.sw.api.security.JwtService;
+import com.sw.api.shared.service.EmailService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +47,9 @@ public class AuthService {
     private final PerfilRepository perfilRepository;
     private final TipoPerfilRepository tipoPerfilRepository;
     private final RolRepository rolRepository;
+    private final EmailService emailService;
+
+    private static final SecureRandom random = new SecureRandom();
 
     @Transactional
     public AuthResponse registrar(RegisterRequest request) {
@@ -84,8 +93,12 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.correo(), request.password()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.correo(), request.password()));
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+        }
 
         var user = usuarioRepository.findByCorreo(request.correo())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
@@ -136,5 +149,67 @@ public class AuthService {
 
         var nuevoToken = jwtService.generarToken(extraClaims, user);
         return new AuthResponse(nuevoToken);
+    }
+
+    @Transactional
+    public MensajeResponse solicitarRecuperacion(RecuperarPasswordRequest request) {
+        Usuario usuario = usuarioRepository.findByCorreo(request.correo())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        String codigo = String.format("%06d", random.nextInt(1000000));
+        LocalDateTime expiracion = LocalDateTime.now().plusMinutes(15);
+
+        usuario.setCodigoRecuperacion(codigo);
+        usuario.setExpiracionCodigoRecuperacion(expiracion);
+        usuarioRepository.save(usuario);
+
+        emailService.enviarCodigoRecuperacion(usuario.getCorreo(), codigo);
+
+        return new MensajeResponse("Código de recuperación enviado al correo");
+    }
+
+    @Transactional
+    public MensajeResponse validarCodigo(ValidarCodigoRequest request) {
+        Usuario usuario = usuarioRepository.findByCorreo(request.correo())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        if (usuario.getCodigoRecuperacion() == null || usuario.getExpiracionCodigoRecuperacion() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se ha solicitado un código de recuperación");
+        }
+
+        if (LocalDateTime.now().isAfter(usuario.getExpiracionCodigoRecuperacion())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El código ha expirado");
+        }
+
+        if (!usuario.getCodigoRecuperacion().equals(request.codigo())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código inválido");
+        }
+
+        return new MensajeResponse("Código válido");
+    }
+
+    @Transactional
+    public MensajeResponse cambiarPassword(CambiarPasswordRequest request) {
+        Usuario usuario = usuarioRepository.findByCorreo(request.correo())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        if (usuario.getCodigoRecuperacion() == null || usuario.getExpiracionCodigoRecuperacion() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se ha solicitado un código de recuperación");
+        }
+
+        if (LocalDateTime.now().isAfter(usuario.getExpiracionCodigoRecuperacion())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El código ha expirado");
+        }
+
+        if (!usuario.getCodigoRecuperacion().equals(request.codigo())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código inválido");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(request.nuevaPassword()));
+        usuario.setCodigoRecuperacion(null);
+        usuario.setExpiracionCodigoRecuperacion(null);
+        usuarioRepository.save(usuario);
+
+        return new MensajeResponse("Contraseña actualizada exitosamente");
     }
 }
