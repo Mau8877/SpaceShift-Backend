@@ -3,8 +3,10 @@ package com.sw.api.modules.publicacion.controller;
 import com.sw.api.modules.publicacion.dto.PublicacionRequestDTO;
 import com.sw.api.modules.publicacion.dto.PublicacionResponseDTO;
 import com.sw.api.modules.publicacion.service.PublicacionService;
+import com.sw.api.modules.usuario.model.Usuario;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +31,12 @@ public class PublicacionController {
     @GetMapping
     public ResponseEntity<List<PublicacionResponseDTO>> obtenerTodas() {
         return ResponseEntity.ok(publicacionService.obtenerTodas());
+    }
+
+    @GetMapping("/mis-publicaciones")
+    public ResponseEntity<List<PublicacionResponseDTO>> obtenerMisPublicaciones(Authentication authentication) {
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        return ResponseEntity.ok(publicacionService.obtenerPorUsuarioId(usuario.getId()));
     }
 
     @GetMapping("/{id}")

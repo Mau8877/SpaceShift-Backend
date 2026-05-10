@@ -78,6 +78,13 @@ public class PublicacionService {
     }
 
     @Transactional(readOnly = true)
+    public List<PublicacionResponseDTO> obtenerPorUsuarioId(UUID usuarioId) {
+        return publicacionRepository.findByUsuarioId(usuarioId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public PublicacionResponseDTO obtenerPorId(UUID id) {
         Publicacion publicacion = publicacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
