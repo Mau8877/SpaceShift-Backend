@@ -7,10 +7,13 @@ import com.sw.api.modules.chat.dto.TypingRequest;
 import com.sw.api.modules.chat.model.Conversacion;
 import com.sw.api.modules.chat.model.EstadoMensaje;
 import com.sw.api.modules.chat.model.Mensaje;
+import com.sw.api.modules.chat.model.ParticipanteConversacion;
 import com.sw.api.modules.chat.repository.ConversacionRepository;
 import com.sw.api.modules.chat.repository.MensajeRepository;
 import com.sw.api.modules.chat.repository.ParticipanteConversacionRepository;
+import com.sw.api.modules.notificacion.service.NotificacionService;
 import com.sw.api.modules.usuario.model.Usuario;
+import com.sw.api.modules.usuario.repository.PerfilRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -19,6 +22,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -29,6 +34,8 @@ public class ChatWebSocketController {
     private final MensajeRepository mensajeRepository;
     private final ConversacionRepository conversacionRepository;
     private final ParticipanteConversacionRepository participanteConversacionRepository;
+    private final NotificacionService notificacionService;
+    private final PerfilRepository perfilRepository;
 
     @MessageMapping("/chat.send")
     public void sendMessage(@Payload SendMessageRequest request, SimpMessageHeaderAccessor headerAccessor) {
@@ -64,6 +71,34 @@ public class ChatWebSocketController {
         );
 
         messagingTemplate.convertAndSend("/topic/chat." + conversacion.getId(), mensajeDTO);
+
+        enviarPushADestinatariosOffline(conversacion.getId(), remitente, request.getContenido());
+    }
+
+    private void enviarPushADestinatariosOffline(java.util.UUID conversacionId, Usuario remitente, String contenido) {
+        List<ParticipanteConversacion> otros = participanteConversacionRepository
+                .findOtrosParticipantes(conversacionId, remitente.getId());
+
+        String nombreRemitente = perfilRepository.findByUsuario(remitente)
+                .map(p -> p.getNombre())
+                .orElse("Alguien");
+
+        String cuerpo = contenido.length() > 60 ? contenido.substring(0, 60) + "..." : contenido;
+
+        for (ParticipanteConversacion participante : otros) {
+            Usuario destinatario = participante.getUsuario();
+            if (!destinatario.isEstadoConexion()) {
+                notificacionService.enviarNotificacion(
+                        destinatario.getId(),
+                        "Nuevo mensaje de " + nombreRemitente,
+                        cuerpo,
+                        Map.of(
+                                "type", "NEW_MESSAGE",
+                                "conversacionId", conversacionId.toString()
+                        )
+                );
+            }
+        }
     }
 
     @MessageMapping("/chat.typing")

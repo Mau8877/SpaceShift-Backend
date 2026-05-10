@@ -182,6 +182,16 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     @Query(value = "SELECT deleted FROM usuario WHERE id = :id", nativeQuery = true)
     Optional<Boolean> findDeletedStateById(@Param("id") UUID id);
 
+    @Modifying
+    @Query(value = """
+            UPDATE usuario
+            SET estado_conexion = :estado,
+                ultima_conexion = NOW(),
+                last_modified_date = NOW()
+            WHERE id = :id
+            """, nativeQuery = true)
+    int actualizarEstadoConexion(@Param("id") UUID id, @Param("estado") boolean estado);
+
     interface UsuarioListProjection {
         UUID getId();
 

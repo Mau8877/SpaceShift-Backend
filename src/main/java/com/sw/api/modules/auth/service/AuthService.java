@@ -93,6 +93,7 @@ public class AuthService {
         return new AuthResponse(jwtToken);
     }
 
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         try {
             authenticationManager.authenticate(
@@ -116,6 +117,11 @@ public class AuthService {
 
         var jwtToken = jwtService.generarToken(extraClaims, user);
         return new AuthResponse(jwtToken);
+    }
+
+    @Transactional
+    public void logout(Usuario usuario) {
+        usuarioRepository.actualizarEstadoConexion(usuario.getId(), false);
     }
 
     public AuthResponse actualizarToken(RefreshTokenRequest request) {

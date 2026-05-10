@@ -36,6 +36,7 @@ build/
 
 # Ignorar credenciales locales
 src/main/resources/application.properties
+src/main/resources/firebase-service-account.json
 
 .env
 .claude/
