@@ -8,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.UUID;
-
 public interface ParticipanteConversacionRepository extends JpaRepository<ParticipanteConversacion, ParticipanteConversacionId> {
 
     @Query("SELECT pc FROM ParticipanteConversacion pc JOIN FETCH pc.conversacion c WHERE pc.usuario.id = :usuarioId ORDER BY c.actualizadoEn DESC")
@@ -16,4 +15,6 @@ public interface ParticipanteConversacionRepository extends JpaRepository<Partic
 
     @Query("SELECT pc FROM ParticipanteConversacion pc WHERE pc.conversacion.id = :conversacionId AND pc.usuario.id != :usuarioId")
     List<ParticipanteConversacion> findOtrosParticipantes(@Param("conversacionId") UUID conversacionId, @Param("usuarioId") UUID usuarioId);
+
+    List<ParticipanteConversacion> findAllByConversacion(com.sw.api.modules.chat.model.Conversacion conversacion);
 }
