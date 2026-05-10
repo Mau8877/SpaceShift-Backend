@@ -13,16 +13,27 @@ import java.io.InputStream;
 public class FirebaseConfig {
 
     @Bean
-    public FirebaseApp firebaseApp() throws IOException {
+    public FirebaseApp firebaseApp() {
         if (!FirebaseApp.getApps().isEmpty()) {
             return FirebaseApp.getInstance();
         }
         InputStream serviceAccount = getClass()
                 .getClassLoader()
                 .getResourceAsStream("firebase-service-account.json");
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
-        return FirebaseApp.initializeApp(options);
+
+        if (serviceAccount == null) {
+            System.err.println("WARNING: firebase-service-account.json no encontrado. Las notificaciones Push estarán deshabilitadas.");
+            return null;
+        }
+
+        try {
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
+            return FirebaseApp.initializeApp(options);
+        } catch (IOException e) {
+            System.err.println("ERROR inicializando Firebase: " + e.getMessage());
+            return null;
+        }
     }
 }

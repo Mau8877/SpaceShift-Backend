@@ -45,4 +45,12 @@ public class ChatController {
         }
         return ResponseEntity.ok(chatService.crearChat(request.getPublicacionId(), usuario));
     }
+    @PutMapping("/{id}/read")
+    public ResponseEntity<Void> marcarComoLeido(@PathVariable UUID id, @AuthenticationPrincipal Usuario usuario) {
+        if (usuario == null) {
+            return ResponseEntity.status(401).build();
+        }
+        chatService.marcarMensajesComoLeidos(id, usuario.getId());
+        return ResponseEntity.ok().build();
+    }
 }

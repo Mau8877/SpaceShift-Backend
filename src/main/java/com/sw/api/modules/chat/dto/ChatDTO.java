@@ -9,5 +9,6 @@ public record ChatDTO(
     UUID otroUsuarioId,
     String nombreOtroUsuario,
     String fotoOtroUsuario,
-    LocalDateTime ultimoMensajeFecha
+    LocalDateTime ultimoMensajeFecha,
+    int mensajesSinLeer
 ) {}

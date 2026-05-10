@@ -59,6 +59,8 @@ public class NotificacionService {
                 if ("UNREGISTERED".equals(e.getMessagingErrorCode().name())) {
                     tokenDispositivoRepository.delete(tokenDispositivo);
                 }
+            } catch (Exception e) {
+                System.err.println("Firebase Push deshabilitado o error: " + e.getMessage());
             }
         }
     }
