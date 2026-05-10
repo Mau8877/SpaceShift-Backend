@@ -66,13 +66,20 @@ public class InmuebleService {
     public InmuebleDTO actualizar(UUID id, InmuebleRequestDTO dto) {
         Inmueble inmueble = obtenerEntidadPorId(id);
 
-        if (dto.tipoInmueble() != null) inmueble.setTipoInmueble(dto.tipoInmueble());
-        if (dto.areaTerreno() != null) inmueble.setAreaTerreno(dto.areaTerreno());
-        if (dto.areaConstruida() != null) inmueble.setAreaConstruida(dto.areaConstruida());
-        if (dto.habitaciones() != null) inmueble.setHabitaciones(dto.habitaciones());
-        if (dto.banos() != null) inmueble.setBanos(dto.banos());
-        if (dto.garajes() != null) inmueble.setGarajes(dto.garajes());
-        if (dto.antiguedadAnios() != null) inmueble.setAntiguedadAnios(dto.antiguedadAnios());
+        if (dto.tipoInmueble() != null)
+            inmueble.setTipoInmueble(dto.tipoInmueble());
+        if (dto.areaTerreno() != null)
+            inmueble.setAreaTerreno(dto.areaTerreno());
+        if (dto.areaConstruida() != null)
+            inmueble.setAreaConstruida(dto.areaConstruida());
+        if (dto.habitaciones() != null)
+            inmueble.setHabitaciones(dto.habitaciones());
+        if (dto.banos() != null)
+            inmueble.setBanos(dto.banos());
+        if (dto.garajes() != null)
+            inmueble.setGarajes(dto.garajes());
+        if (dto.antiguedadAnios() != null)
+            inmueble.setAntiguedadAnios(dto.antiguedadAnios());
 
         if (dto.ubicacion() != null) {
             Ubicacion ubi = inmueble.getUbicacion();
@@ -80,11 +87,16 @@ public class InmuebleService {
                 ubi = new Ubicacion();
                 inmueble.setUbicacion(ubi);
             }
-            if (dto.ubicacion().ciudad() != null) ubi.setCiudad(dto.ubicacion().ciudad());
-            if (dto.ubicacion().zonaBarrios() != null) ubi.setZonaBarrios(dto.ubicacion().zonaBarrios());
-            if (dto.ubicacion().direccionExacta() != null) ubi.setDireccionExacta(dto.ubicacion().direccionExacta());
-            if (dto.ubicacion().latitud() != null) ubi.setLatitud(dto.ubicacion().latitud());
-            if (dto.ubicacion().longitud() != null) ubi.setLongitud(dto.ubicacion().longitud());
+            if (dto.ubicacion().ciudad() != null)
+                ubi.setCiudad(dto.ubicacion().ciudad());
+            if (dto.ubicacion().zonaBarrios() != null)
+                ubi.setZonaBarrios(dto.ubicacion().zonaBarrios());
+            if (dto.ubicacion().direccionExacta() != null)
+                ubi.setDireccionExacta(dto.ubicacion().direccionExacta());
+            if (dto.ubicacion().latitud() != null)
+                ubi.setLatitud(dto.ubicacion().latitud());
+            if (dto.ubicacion().longitud() != null)
+                ubi.setLongitud(dto.ubicacion().longitud());
         }
 
         return mapToDTO(repository.save(inmueble));
@@ -96,15 +108,15 @@ public class InmuebleService {
     }
 
     public InmuebleDTO mapToDTO(Inmueble inmueble) {
-        if (inmueble == null) return null;
+        if (inmueble == null)
+            return null;
 
         UbicacionDTO ubiDTO = null;
         if (inmueble.getUbicacion() != null) {
             Ubicacion u = inmueble.getUbicacion();
             ubiDTO = new UbicacionDTO(
                     u.getId(), u.getCiudad(), u.getZonaBarrios(),
-                    u.getDireccionExacta(), u.getLatitud(), u.getLongitud()
-            );
+                    u.getDireccionExacta(), u.getLatitud(), u.getLongitud());
         }
 
         return new InmuebleDTO(
@@ -116,7 +128,6 @@ public class InmuebleService {
                 inmueble.getBanos(),
                 inmueble.getGarajes(),
                 inmueble.getAntiguedadAnios(),
-                ubiDTO
-        );
+                ubiDTO);
     }
 }
