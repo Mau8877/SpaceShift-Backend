@@ -20,6 +20,16 @@ public class InmuebleController {
         this.inmuebleService = inmuebleService;
     }
 
+    @GetMapping("/ubicaciones")
+    public ResponseEntity<List<String>> obtenerUbicaciones() {
+        return ResponseEntity.ok(inmuebleService.obtenerUbicacionesUnicas());
+    }
+
+    @GetMapping("/tipos")
+    public ResponseEntity<List<String>> obtenerTipos() {
+        return ResponseEntity.ok(inmuebleService.obtenerTiposInmuebleUnicos());
+    }
+
     @PostMapping
     public ResponseEntity<InmuebleDTO> crear(@RequestBody InmuebleRequestDTO dto) {
         return new ResponseEntity<>(inmuebleService.crear(dto), HttpStatus.CREATED);

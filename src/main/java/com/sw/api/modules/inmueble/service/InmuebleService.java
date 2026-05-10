@@ -6,6 +6,7 @@ import com.sw.api.modules.inmueble.dto.UbicacionDTO;
 import com.sw.api.modules.inmueble.model.Inmueble;
 import com.sw.api.modules.inmueble.model.Ubicacion;
 import com.sw.api.modules.inmueble.repository.InmuebleRepository;
+import com.sw.api.modules.inmueble.repository.UbicacionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,9 +18,21 @@ import java.util.stream.Collectors;
 public class InmuebleService {
 
     private final InmuebleRepository repository;
+    private final UbicacionRepository ubicacionRepository;
 
-    public InmuebleService(InmuebleRepository repository) {
+    public InmuebleService(InmuebleRepository repository, UbicacionRepository ubicacionRepository) {
         this.repository = repository;
+        this.ubicacionRepository = ubicacionRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> obtenerUbicacionesUnicas() {
+        return ubicacionRepository.findDistinctZonaBarrios();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> obtenerTiposInmuebleUnicos() {
+        return repository.findDistinctTipoInmueble();
     }
 
     public Inmueble obtenerEntidadPorId(UUID id) {

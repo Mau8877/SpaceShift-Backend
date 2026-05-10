@@ -12,6 +12,9 @@ import java.util.UUID;
 @Repository
 public interface PublicacionRepository extends JpaRepository<Publicacion, UUID> {
 
+    @Query("SELECT DISTINCT p.tipoTransaccion FROM Publicacion p WHERE p.tipoTransaccion IS NOT NULL")
+    List<String> findDistinctTipoTransaccion();
+
     @Query(value = """
             SELECT id_usuario AS usuarioId,
                    COUNT(*) AS totalPublicaciones

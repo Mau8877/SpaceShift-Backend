@@ -32,6 +32,11 @@ public class PublicacionService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    @Transactional(readOnly = true)
+    public List<String> obtenerTiposTransaccionUnicos() {
+        return publicacionRepository.findDistinctTipoTransaccion();
+    }
+
     @Transactional
     public PublicacionResponseDTO crear(PublicacionRequestDTO dto) {
         Usuario usuario = usuarioRepository.findById(dto.idUsuario())

@@ -20,6 +20,11 @@ public class PublicacionController {
         this.publicacionService = publicacionService;
     }
 
+    @GetMapping("/tipos-transaccion")
+    public ResponseEntity<List<String>> obtenerTiposTransaccion() {
+        return ResponseEntity.ok(publicacionService.obtenerTiposTransaccionUnicos());
+    }
+
     @PostMapping
     public ResponseEntity<PublicacionResponseDTO> crear(@RequestBody PublicacionRequestDTO dto) {
         PublicacionResponseDTO response = publicacionService.crear(dto);
