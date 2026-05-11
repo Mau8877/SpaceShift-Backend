@@ -3,6 +3,7 @@ package com.sw.api.modules.chat.service;
 import com.sw.api.modules.chat.dto.ChatDTO;
 import com.sw.api.modules.chat.dto.MensajeDTO;
 import com.sw.api.modules.chat.model.Conversacion;
+import com.sw.api.modules.chat.model.EstadoMensaje;
 import com.sw.api.modules.chat.model.Mensaje;
 import com.sw.api.modules.chat.model.ParticipanteConversacion;
 import com.sw.api.modules.chat.model.ParticipanteConversacionId;
@@ -72,15 +73,23 @@ public class ChatService {
                 titulo = conversacion.getPropiedad().getTipoInmueble();
             }
 
+            int mensajesSinLeer = mensajeRepository.countByConversacionIdAndEstadoNotAndRemitenteIdNot(
+                    conversacion.getId(), EstadoMensaje.LEIDO, usuarioAutenticado.getId());
+
             return new ChatDTO(
                     conversacion.getId(),
                     titulo,
                     otroUsuarioId,
                     nombreOtroUsuario,
                     fotoOtroUsuario,
-                    conversacion.getActualizadoEn()
+                    conversacion.getActualizadoEn(),
+                    mensajesSinLeer
             );
         }).collect(Collectors.toList());
+    }
+
+    public void marcarMensajesComoLeidos(UUID conversacionId, UUID usuarioId) {
+        mensajeRepository.marcarComoLeidos(conversacionId, usuarioId);
     }
 
     public Page<MensajeDTO> obtenerHistorialPaginado(UUID conversacionId, int page, int size) {
@@ -101,25 +110,40 @@ public class ChatService {
         Publicacion publicacion = publicacionRepository.findById(publicacionId)
                 .orElseThrow(() -> new RuntimeException("Publicacion no encontrada"));
 
-        Conversacion conversacion = new Conversacion();
-        conversacion.setPropiedad(publicacion.getInmueble());
-        conversacion = conversacionRepository.save(conversacion);
-
-        ParticipanteConversacion partCliente = new ParticipanteConversacion();
-        partCliente.setId(new ParticipanteConversacionId(conversacion.getId(), cliente.getId()));
-        partCliente.setConversacion(conversacion);
-        partCliente.setUsuario(cliente);
-        partCliente.setRol(RolParticipante.CLIENTE);
-        participanteConversacionRepository.save(partCliente);
-
         Usuario propietario = publicacion.getUsuario();
-        if (!propietario.getId().equals(cliente.getId())) {
-            ParticipanteConversacion partPropietario = new ParticipanteConversacion();
-            partPropietario.setId(new ParticipanteConversacionId(conversacion.getId(), propietario.getId()));
-            partPropietario.setConversacion(conversacion);
-            partPropietario.setUsuario(propietario);
-            partPropietario.setRol(RolParticipante.PROPIETARIO);
-            participanteConversacionRepository.save(partPropietario);
+        
+        // 1. Check if conversation already exists
+        Optional<Conversacion> existingConversacion = conversacionRepository.findByInmuebleAndParticipantes(
+            publicacion.getInmueble().getId(), 
+            cliente.getId(), 
+            propietario.getId()
+        );
+
+        Conversacion conversacion;
+        
+        if (existingConversacion.isPresent()) {
+            conversacion = existingConversacion.get();
+        } else {
+            // Create a new conversation if it doesn't exist
+            conversacion = new Conversacion();
+            conversacion.setPropiedad(publicacion.getInmueble());
+            conversacion = conversacionRepository.save(conversacion);
+
+            ParticipanteConversacion partCliente = new ParticipanteConversacion();
+            partCliente.setId(new ParticipanteConversacionId(conversacion.getId(), cliente.getId()));
+            partCliente.setConversacion(conversacion);
+            partCliente.setUsuario(cliente);
+            partCliente.setRol(RolParticipante.CLIENTE);
+            participanteConversacionRepository.save(partCliente);
+
+            if (!propietario.getId().equals(cliente.getId())) {
+                ParticipanteConversacion partPropietario = new ParticipanteConversacion();
+                partPropietario.setId(new ParticipanteConversacionId(conversacion.getId(), propietario.getId()));
+                partPropietario.setConversacion(conversacion);
+                partPropietario.setUsuario(propietario);
+                partPropietario.setRol(RolParticipante.PROPIETARIO);
+                participanteConversacionRepository.save(partPropietario);
+            }
         }
 
         String nombrePropietario = "Desconocido";
@@ -140,7 +164,8 @@ public class ChatService {
                 propietario.getId(),
                 nombrePropietario,
                 fotoPropietario,
-                conversacion.getActualizadoEn()
+                conversacion.getActualizadoEn(),
+                0
         );
     }
 }

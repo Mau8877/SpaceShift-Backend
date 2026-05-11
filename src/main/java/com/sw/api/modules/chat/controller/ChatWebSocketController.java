@@ -61,6 +61,9 @@ public class ChatWebSocketController {
 
         Mensaje savedMensaje = mensajeRepository.save(mensaje);
 
+        conversacion.setActualizadoEn(java.time.LocalDateTime.now());
+        conversacionRepository.save(conversacion);
+
         MensajeDTO mensajeDTO = new MensajeDTO(
                 savedMensaje.getId(),
                 conversacion.getId(),
@@ -71,6 +74,18 @@ public class ChatWebSocketController {
         );
 
         messagingTemplate.convertAndSend("/topic/chat." + conversacion.getId(), mensajeDTO);
+
+        // Also deliver to each participant's private queue so the inbox
+        // updates in real time even when they are not inside this conversation
+        List<ParticipanteConversacion> todosParticipantes = participanteConversacionRepository
+                .findAllByConversacion(conversacion);
+        for (ParticipanteConversacion participante : todosParticipantes) {
+            messagingTemplate.convertAndSendToUser(
+                    participante.getUsuario().getCorreo(),
+                    "/queue/messages",
+                    mensajeDTO
+            );
+        }
 
         enviarPushADestinatariosOffline(conversacion.getId(), remitente, request.getContenido());
     }
