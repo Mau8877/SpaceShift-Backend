@@ -24,7 +24,7 @@ public class Publicacion extends Auditable {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_inmueble", nullable = false)
     private Inmueble inmueble;
 
@@ -44,7 +44,7 @@ public class Publicacion extends Auditable {
     private String moneda = "USD";
 
     @Column(name = "estado_publicacion", nullable = false)
-    private String estadoPublicacion = "ACTIVO";
+    private String estadoPublicacion = "DISPONIBLE";
 
     @Column(name = "fecha_publicacion")
     private LocalDateTime fechaPublicacion;
