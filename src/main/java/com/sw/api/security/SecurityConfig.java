@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/publicaciones/**", "/api/inmuebles/**")
                         .permitAll()
                         .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/reportes/**").hasAuthority("ROLE_ADMIN")
                         // Cualquier otra petición a la API exigirá un token válido
                         .anyRequest().authenticated())
 
