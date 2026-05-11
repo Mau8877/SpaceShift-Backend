@@ -9,10 +9,12 @@ import com.sw.api.modules.auth.dto.ValidarCodigoRequest;
 import com.sw.api.modules.auth.dto.CambiarPasswordRequest;
 import com.sw.api.modules.auth.dto.MensajeResponse;
 import com.sw.api.modules.auth.service.AuthService;
+import com.sw.api.modules.usuario.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -50,6 +52,14 @@ public class AuthController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
         return headers;
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal Usuario usuario) {
+        if (usuario != null) {
+            authService.logout(usuario);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/refresh")

@@ -31,6 +31,8 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, UUID> 
     @Query(value = "SELECT COUNT(*) FROM publicacion WHERE deleted = FALSE AND id_usuario = :usuarioId", nativeQuery = true)
     Long countPublicacionesActivasByUsuarioId(@Param("usuarioId") UUID usuarioId);
 
+    List<Publicacion> findByUsuarioId(UUID usuarioId);
+
     interface PublicacionCountProjection {
         UUID getUsuarioId();
 

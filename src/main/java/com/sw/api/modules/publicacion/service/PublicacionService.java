@@ -83,6 +83,13 @@ public class PublicacionService {
     }
 
     @Transactional(readOnly = true)
+    public List<PublicacionResponseDTO> obtenerPorUsuarioId(UUID usuarioId) {
+        return publicacionRepository.findByUsuarioId(usuarioId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public PublicacionResponseDTO obtenerPorId(UUID id) {
         Publicacion publicacion = publicacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
@@ -104,6 +111,9 @@ public class PublicacionService {
         if (dto.idInmueble() != null && !dto.idInmueble().equals(publicacion.getInmueble().getId())) {
             Inmueble nuevoInmueble = inmuebleService.obtenerEntidadPorId(dto.idInmueble());
             publicacion.setInmueble(nuevoInmueble);
+        } else if (dto.inmueble() != null) {
+            // Si el ID es el mismo, pero vienen detalles, los actualizamos
+            inmuebleService.actualizar(publicacion.getInmueble().getId(), dto.inmueble());
         }
 
         if (dto.imagenesUrls() != null) {
@@ -126,6 +136,12 @@ public class PublicacionService {
     public void eliminar(UUID id) {
         Publicacion publicacion = publicacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
+        
+        // Gracias a CascadeType.ALL en las relaciones, esto borrará lógicamente:
+        // 1. La Publicación
+        // 2. Sus Imágenes asociadas
+        // 3. El Inmueble asociado
+        // 4. La Ubicación asociada al inmueble
         publicacionRepository.delete(publicacion);
     }
 
