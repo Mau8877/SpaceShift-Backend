@@ -44,13 +44,27 @@ public class PublicacionController {
         return ResponseEntity.ok(publicacionService.obtenerPorUsuarioId(usuario.getId()));
     }
 
+    @GetMapping("/mis-favoritos")
+    public ResponseEntity<List<PublicacionResponseDTO>> obtenerMisFavoritos(Authentication authentication) {
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        return ResponseEntity.ok(publicacionService.obtenerMisFavoritos(usuario.getId()));
+    }
+
+    @PostMapping("/{id}/favorito")
+    public ResponseEntity<Void> alternarFavorito(@PathVariable UUID id, Authentication authentication) {
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        publicacionService.alternarFavorito(id, usuario.getId());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PublicacionResponseDTO> obtenerPorId(@PathVariable UUID id) {
         return ResponseEntity.ok(publicacionService.obtenerPorId(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PublicacionResponseDTO> actualizar(@PathVariable UUID id, @RequestBody PublicacionRequestDTO dto) {
+    public ResponseEntity<PublicacionResponseDTO> actualizar(@PathVariable UUID id,
+            @RequestBody PublicacionRequestDTO dto) {
         return ResponseEntity.ok(publicacionService.actualizar(id, dto));
     }
 

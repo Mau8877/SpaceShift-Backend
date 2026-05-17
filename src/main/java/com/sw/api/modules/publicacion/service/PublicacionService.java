@@ -9,7 +9,9 @@ import com.sw.api.modules.publicacion.repository.PublicacionRepository;
 import com.sw.api.modules.inmueble.model.Inmueble;
 import com.sw.api.modules.inmueble.service.InmuebleService;
 import com.sw.api.modules.usuario.model.Usuario;
+import com.sw.api.modules.usuario.model.Favorito;
 import com.sw.api.modules.usuario.repository.UsuarioRepository;
+import com.sw.api.modules.usuario.repository.FavoritoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +25,16 @@ public class PublicacionService {
     private final PublicacionRepository publicacionRepository;
     private final InmuebleService inmuebleService;
     private final UsuarioRepository usuarioRepository;
+    private final FavoritoRepository favoritoRepository;
 
     public PublicacionService(PublicacionRepository publicacionRepository,
-                              InmuebleService inmuebleService,
-                              UsuarioRepository usuarioRepository) {
+            InmuebleService inmuebleService,
+            UsuarioRepository usuarioRepository,
+            FavoritoRepository favoritoRepository) {
         this.publicacionRepository = publicacionRepository;
         this.inmuebleService = inmuebleService;
         this.usuarioRepository = usuarioRepository;
+        this.favoritoRepository = favoritoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -90,6 +95,31 @@ public class PublicacionService {
     }
 
     @Transactional(readOnly = true)
+    public List<PublicacionResponseDTO> obtenerMisFavoritos(UUID usuarioId) {
+        return favoritoRepository.findByUsuarioIdOrderByFechaAgregadoDesc(usuarioId).stream()
+                .map(Favorito::getPublicacion)
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void alternarFavorito(UUID idPublicacion, UUID usuarioId) {
+        if (favoritoRepository.existsByUsuarioIdAndPublicacionId(usuarioId, idPublicacion)) {
+            favoritoRepository.deleteByUsuarioIdAndPublicacionId(usuarioId, idPublicacion);
+        } else {
+            Usuario usuario = usuarioRepository.findById(usuarioId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            Publicacion publicacion = publicacionRepository.findById(idPublicacion)
+                    .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
+            
+            Favorito favorito = new Favorito();
+            favorito.setUsuario(usuario);
+            favorito.setPublicacion(publicacion);
+            favoritoRepository.save(favorito);
+        }
+    }
+
+    @Transactional(readOnly = true)
     public PublicacionResponseDTO obtenerPorId(UUID id) {
         Publicacion publicacion = publicacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
@@ -101,12 +131,18 @@ public class PublicacionService {
         Publicacion publicacion = publicacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
 
-        if (dto.titulo() != null) publicacion.setTitulo(dto.titulo());
-        if (dto.descripcionGeneral() != null) publicacion.setDescripcionGeneral(dto.descripcionGeneral());
-        if (dto.tipoTransaccion() != null) publicacion.setTipoTransaccion(dto.tipoTransaccion());
-        if (dto.precio() != null) publicacion.setPrecio(dto.precio());
-        if (dto.moneda() != null) publicacion.setMoneda(dto.moneda());
-        if (dto.estadoPublicacion() != null) publicacion.setEstadoPublicacion(dto.estadoPublicacion());
+        if (dto.titulo() != null)
+            publicacion.setTitulo(dto.titulo());
+        if (dto.descripcionGeneral() != null)
+            publicacion.setDescripcionGeneral(dto.descripcionGeneral());
+        if (dto.tipoTransaccion() != null)
+            publicacion.setTipoTransaccion(dto.tipoTransaccion());
+        if (dto.precio() != null)
+            publicacion.setPrecio(dto.precio());
+        if (dto.moneda() != null)
+            publicacion.setMoneda(dto.moneda());
+        if (dto.estadoPublicacion() != null)
+            publicacion.setEstadoPublicacion(dto.estadoPublicacion());
 
         if (dto.idInmueble() != null && !dto.idInmueble().equals(publicacion.getInmueble().getId())) {
             Inmueble nuevoInmueble = inmuebleService.obtenerEntidadPorId(dto.idInmueble());
@@ -136,7 +172,7 @@ public class PublicacionService {
     public void eliminar(UUID id) {
         Publicacion publicacion = publicacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
-        
+
         // Gracias a CascadeType.ALL en las relaciones, esto borrará lógicamente:
         // 1. La Publicación
         // 2. Sus Imágenes asociadas
@@ -162,7 +198,6 @@ public class PublicacionService {
                 publicacion.getMoneda(),
                 publicacion.getEstadoPublicacion(),
                 publicacion.getFechaPublicacion(),
-                imgs
-        );
+                imgs);
     }
 }
