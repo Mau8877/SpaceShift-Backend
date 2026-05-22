@@ -15,6 +15,7 @@ import com.sw.api.modules.usuario.repository.FavoritoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -83,6 +84,13 @@ public class PublicacionService {
     @Transactional(readOnly = true)
     public List<PublicacionResponseDTO> obtenerTodas() {
         return publicacionRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PublicacionResponseDTO> obtenerTodasConFiltros(String tipoTransaccion, String ubicacion, String tipoInmueble, BigDecimal minPrecio, BigDecimal maxPrecio) {
+        return publicacionRepository.findByFiltros(tipoTransaccion, ubicacion, tipoInmueble, minPrecio, maxPrecio).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }

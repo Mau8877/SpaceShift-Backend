@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +33,18 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, UUID> 
     Long countPublicacionesActivasByUsuarioId(@Param("usuarioId") UUID usuarioId);
 
     List<Publicacion> findByUsuarioId(UUID usuarioId);
+
+    @Query("SELECT p FROM Publicacion p WHERE " +
+          "(:tipoTransaccion IS NULL OR p.tipoTransaccion = :tipoTransaccion) AND " +
+          "(:tipoInmueble IS NULL OR p.inmueble.tipoInmueble = :tipoInmueble) AND " +
+          "(:ubicacion IS NULL OR p.inmueble.ubicacion.zonaBarrios = :ubicacion) AND " +
+          "(:minPrecio IS NULL OR p.precio >= :minPrecio) AND " +
+          "(:maxPrecio IS NULL OR p.precio <= :maxPrecio)")
+    List<Publicacion> findByFiltros(@Param("tipoTransaccion") String tipoTransaccion,
+                                    @Param("ubicacion") String ubicacion,
+                                    @Param("tipoInmueble") String tipoInmueble,
+                                    @Param("minPrecio") BigDecimal minPrecio,
+                                    @Param("maxPrecio") BigDecimal maxPrecio);
 
     interface PublicacionCountProjection {
         UUID getUsuarioId();

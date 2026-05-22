@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,8 +35,18 @@ public class PublicacionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PublicacionResponseDTO>> obtenerTodas() {
-        return ResponseEntity.ok(publicacionService.obtenerTodas());
+    public ResponseEntity<List<PublicacionResponseDTO>> obtenerTodas(
+            @RequestParam(required = false) String tipoTransaccion,
+            @RequestParam(required = false) String ubicacion,
+            @RequestParam(required = false) String tipoInmueble,
+            @RequestParam(required = false) BigDecimal minPrecio,
+            @RequestParam(required = false) BigDecimal maxPrecio) {
+        
+        if (tipoTransaccion == null && ubicacion == null && tipoInmueble == null && minPrecio == null && maxPrecio == null) {
+            return ResponseEntity.ok(publicacionService.obtenerTodas());
+        }
+        
+        return ResponseEntity.ok(publicacionService.obtenerTodasConFiltros(tipoTransaccion, ubicacion, tipoInmueble, minPrecio, maxPrecio));
     }
 
     @GetMapping("/mis-publicaciones")
