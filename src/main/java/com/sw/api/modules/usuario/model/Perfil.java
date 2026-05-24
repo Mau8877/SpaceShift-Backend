@@ -38,4 +38,7 @@ public class Perfil extends Auditable {
     @ManyToOne
     @JoinColumn(name = "id_tipo_perfil", nullable = false)
     private TipoPerfil tipoPerfil;
+
+    @Column(name = "saldo_creditos")
+    private Integer saldoCreditos = 1000;
 }
