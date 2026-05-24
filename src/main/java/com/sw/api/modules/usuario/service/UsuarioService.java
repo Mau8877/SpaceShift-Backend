@@ -16,6 +16,9 @@ import com.sw.api.modules.usuario.repository.PerfilRepository;
 import com.sw.api.modules.usuario.repository.RolRepository;
 import com.sw.api.modules.usuario.repository.TipoPerfilRepository;
 import com.sw.api.modules.usuario.repository.UsuarioRepository;
+import com.sw.api.modules.token.model.TipoTransaccion;
+import com.sw.api.modules.token.model.TransaccionCredito;
+import com.sw.api.modules.token.repository.TransaccionCreditoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +42,7 @@ public class UsuarioService {
     private final TipoPerfilRepository tipoPerfilRepository;
     private final PublicacionRepository publicacionRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TransaccionCreditoRepository transaccionCreditoRepository;
 
     @Transactional(readOnly = true)
     public UsuarioPageResponseDTO listarUsuarios(int page, int size, String search, Boolean estado, Boolean estadoConexion) {
@@ -132,7 +136,17 @@ public class UsuarioService {
         perfil.setDescripcion(normalizeNullable(request.descripcion()));
         perfil.setFotoUrl(null);
         perfil.setTipoPerfil(tipoPerfil);
+        perfil.setSaldoCreditos(1000); // Asegurar que inicie en 1000 créditos
         perfilRepository.save(perfil);
+
+        // Guardar la transacción de regalo/bono de bienvenida
+        TransaccionCredito transaccion = TransaccionCredito.builder()
+                .usuario(usuarioGuardado)
+                .cantidad(1000)
+                .tipo(TipoTransaccion.REGISTRO_INICIAL)
+                .descripcion("Bono de bienvenida de 1000 créditos")
+                .build();
+        transaccionCreditoRepository.save(transaccion);
 
         return obtenerDetalle(usuarioGuardado.getId());
     }
