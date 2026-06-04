@@ -5,6 +5,11 @@ import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
+import com.sw.api.modules.contrato.model.EstadoPago;
+import com.sw.api.modules.contrato.model.MetodoPago;
+import com.sw.api.modules.contrato.model.PagoContrato;
+import com.sw.api.modules.contrato.repository.PagoContratoRepository;
+import com.sw.api.modules.notificacion.service.NotificacionService;
 import com.sw.api.modules.token.model.PagoStripe;
 import com.sw.api.modules.token.model.PaqueteCredito;
 import com.sw.api.modules.token.model.TipoTransaccion;
@@ -18,7 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -30,6 +38,8 @@ public class StripeWebhookService {
     private final PaqueteCreditoRepository paqueteRepository;
     private final UsuarioRepository usuarioRepository;
     private final TokenService tokenService;
+    private final PagoContratoRepository pagoContratoRepository;
+    private final NotificacionService notificacionService;
 
     @Value("${stripe.webhook-secret}")
     private String webhookSecret;
@@ -45,14 +55,59 @@ public class StripeWebhookService {
         if ("checkout.session.completed".equals(event.getType())) {
             EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
             try {
-                // Usar deserializeUnsafe() para evitar bloqueos por discrepancias de versión de la API de Stripe
                 Session session = (Session) dataObjectDeserializer.deserializeUnsafe();
-                acreditarCompraSession(session);
+                if (session.getMetadata() != null && "CONTRATO_PAGO".equals(session.getMetadata().get("tipo"))) {
+                    acreditarPagoContrato(session);
+                } else {
+                    acreditarCompraSession(session);
+                }
             } catch (Exception e) {
-                log.error("Error al deserializar el objeto Session del evento Stripe de forma flexible", e);
-                throw new RuntimeException("Error al deserializar evento de Stripe", e);
+                log.error("Error al procesar webhook de Stripe", e);
+                throw new RuntimeException("Error al procesar evento de Stripe", e);
             }
         }
+    }
+
+    private void acreditarPagoContrato(Session session) {
+        String stripeSessionId = session.getId();
+        String pagoIdStr = session.getMetadata().get("pagoId");
+
+        if (pagoIdStr == null) {
+            log.error("Falta metadata pagoId en la sesión de Stripe");
+            throw new IllegalArgumentException("Metadata pagoId faltante");
+        }
+
+        UUID pagoId = UUID.fromString(pagoIdStr);
+        PagoContrato pago = pagoContratoRepository.findById(pagoId)
+                .orElseThrow(() -> new RuntimeException("Pago de contrato no encontrado: " + pagoId));
+
+        if (pago.getEstadoPago() == EstadoPago.COMPLETADO) {
+            log.info("El pago con ID {} ya se encuentra completado (idempotencia).", pagoId);
+            return;
+        }
+
+        pago.setEstadoPago(EstadoPago.COMPLETADO);
+        pago.setMetodoPago(MetodoPago.STRIPE);
+        pago.setFechaPago(LocalDateTime.now());
+        pago.setStripePagoId(stripeSessionId);
+        pagoContratoRepository.save(pago);
+
+        log.info("¡Pago de contrato completado vía Stripe con éxito! Pago ID: {}", pagoId);
+
+        // Notificar al propietario y cliente
+        notificacionService.enviarNotificacion(
+                pago.getContrato().getPropietario().getId(),
+                "Pago de Contrato Recibido",
+                "Se completó el pago de " + pago.getMonto() + " " + pago.getMoneda() + " vía Stripe.",
+                Map.of("type", "PAYMENT_APPROVED", "contratoId", pago.getContrato().getId().toString())
+        );
+
+        notificacionService.enviarNotificacion(
+                pago.getContrato().getCliente().getId(),
+                "Pago Procesado con Éxito",
+                "Tu pago de " + pago.getMonto() + " " + pago.getMoneda() + " vía Stripe fue procesado con éxito.",
+                Map.of("type", "PAYMENT_APPROVED", "contratoId", pago.getContrato().getId().toString())
+        );
     }
 
     private void acreditarCompraSession(Session session) {

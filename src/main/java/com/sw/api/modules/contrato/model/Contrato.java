@@ -1,22 +1,18 @@
 package com.sw.api.modules.contrato.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import com.sw.api.modules.inmueble.model.Inmueble;
 import com.sw.api.modules.publicacion.model.Publicacion;
 import com.sw.api.modules.usuario.model.Usuario;
 import com.sw.api.shared.model.Auditable;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -45,11 +41,13 @@ public class Contrato extends Auditable {
     @JoinColumn(name = "id_cliente", nullable = false)
     private Usuario cliente;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "tipo_contrato", nullable = false, length = 50)
-    private String tipoContrato;
+    private TipoContrato tipoContrato;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado_contrato", nullable = false, length = 50)
-    private String estadoContrato;
+    private EstadoContrato estadoContrato;
 
     @Column(name = "monto_acordado", nullable = false, precision = 12, scale = 2)
     private BigDecimal montoAcordado;
@@ -73,4 +71,8 @@ public class Contrato extends Auditable {
 
     @Column(columnDefinition = "TEXT")
     private String observacion;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "especificaciones", columnDefinition = "jsonb")
+    private Map<String, Object> especificaciones;
 }

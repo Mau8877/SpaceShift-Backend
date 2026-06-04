@@ -38,6 +38,7 @@ public class SecurityConfig {
                         // Permitimos ver publicaciones e inmuebles sin estar logueado
                         .requestMatchers(HttpMethod.GET, "/api/publicaciones/**", "/api/inmuebles/**")
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/**").authenticated()
                         .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/reportes/**").hasAuthority("ROLE_ADMIN")
                         // Cualquier otra petición a la API exigirá un token válido
