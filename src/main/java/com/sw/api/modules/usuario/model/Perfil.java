@@ -41,4 +41,7 @@ public class Perfil extends Auditable {
 
     @Column(name = "saldo_creditos")
     private Integer saldoCreditos = 1000;
+
+    @Column(name = "wallet_address", length = 42)
+    private String walletAddress;
 }

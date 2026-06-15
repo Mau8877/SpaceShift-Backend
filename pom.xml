@@ -161,6 +161,12 @@
                     <artifactId>stripe-java</artifactId>
                     <version>32.1.0</version>
                 </dependency>
+                <!-- Web3j Integration -->
+                <dependency>
+                    <groupId>org.web3j</groupId>
+                    <artifactId>core</artifactId>
+                    <version>4.10.0</version>
+                </dependency>
 	</dependencies>
 
 	<build>

@@ -13,6 +13,7 @@ import com.sw.api.modules.publicacion.repository.PublicacionRepository;
 import com.sw.api.modules.usuario.model.Usuario;
 import com.sw.api.modules.usuario.repository.UsuarioRepository;
 import com.sw.api.modules.usuario.repository.PerfilRepository;
+import com.sw.api.modules.blockchain.service.Web3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class ContratoService {
     private final UsuarioRepository usuarioRepository;
     private final NotificacionService notificacionService;
     private final PerfilRepository perfilRepository;
+    private final Web3Service web3Service;
 
     @Transactional
     public ContratoResponseDTO crearContrato(ContratoRequestDTO dto) {
@@ -108,6 +110,32 @@ public class ContratoService {
         }
 
         contrato.setEstadoContrato(EstadoContrato.VIGENTE);
+
+        // Generar wallet determinista del inquilino
+        String targetWallet = web3Service.generateDeterministicWalletAddress(contrato.getCliente().getId());
+
+        if (targetWallet != null && !targetWallet.trim().isEmpty()) {
+            final String finalWallet = targetWallet;
+            perfilRepository.findByUsuarioId(contrato.getCliente().getId()).ifPresent(perfil -> {
+                perfil.setWalletAddress(finalWallet);
+                perfilRepository.save(perfil);
+            });
+
+            // Intentar registrar el contrato en la Blockchain
+            try {
+                String txHash = web3Service.registerPropertyContractOnChain(
+                        contrato.getId().toString(),
+                        finalWallet
+                );
+                if (txHash != null) {
+                    contrato.setTransactionHash(txHash);
+                }
+            } catch (Exception e) {
+                // Loguear error sin bloquear el flujo local de la aplicacion
+                System.err.println("Advertencia: No se pudo registrar en la Blockchain: " + e.getMessage());
+            }
+        }
+
         contrato = contratoRepository.save(contrato);
 
         // Notificar al cliente
@@ -277,6 +305,7 @@ public class ContratoService {
         dto.setEspecificaciones(c.getEspecificaciones());
         dto.setCreatedDate(c.getCreatedDate());
         dto.setCreatedAt(c.getCreatedDate());
+        dto.setTransactionHash(c.getTransactionHash());
         return dto;
     }
 

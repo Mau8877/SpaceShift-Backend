@@ -75,4 +75,7 @@ public class Contrato extends Auditable {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "especificaciones", columnDefinition = "jsonb")
     private Map<String, Object> especificaciones;
+
+    @Column(name = "transaction_hash", length = 66)
+    private String transactionHash;
 }

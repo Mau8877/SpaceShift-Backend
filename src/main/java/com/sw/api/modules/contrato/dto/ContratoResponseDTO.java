@@ -37,4 +37,5 @@ public class ContratoResponseDTO {
     private Map<String, Object> especificaciones;
     private LocalDateTime createdDate;
     private LocalDateTime createdAt;
+    private String transactionHash;
 }
