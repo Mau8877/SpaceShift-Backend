@@ -37,6 +37,9 @@ public class Web3Service {
     @Value("${spaceshift.blockchain.master-secret:SpaceShiftSuperSecretMasterKey}")
     private String masterSecret;
 
+    @Value("${spaceshift.blockchain.chain-id:80002}")
+    private long chainId;
+
     private final Web3j web3j;
     private final Credentials credentials;
 
@@ -47,7 +50,8 @@ public class Web3Service {
         }
 
         try {
-            log.info("Iniciando registro on-chain de contrato. Propiedad: {}, Inquilino: {}", propertyId, tenantWalletAddress);
+            log.info("Iniciando registro on-chain de contrato. Propiedad: {}, Inquilino: {}", propertyId,
+                    tenantWalletAddress);
 
             // Obtener nonce para la transaccion
             EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
@@ -58,13 +62,15 @@ public class Web3Service {
             Function function = new Function(
                     "createPropertyContract",
                     Arrays.asList(new Utf8String(propertyId), new Address(tenantWalletAddress)),
-                    Collections.emptyList()
-            );
+                    Collections.emptyList());
 
             String encodedFunction = FunctionEncoder.encode(function);
 
-            // Parametros de Gas (Hardhat local acepta gas price bajo/estandar)
-            BigInteger gasPrice = BigInteger.valueOf(20_000_000_000L); // 20 Gwei
+            // Obtener el precio del gas de forma dinámica desde el nodo de la red
+            BigInteger gasPrice = web3j.ethGasPrice().send().getGasPrice();
+            // Multiplicar por 1.25 para asegurar que supere el mínimo y evitar variaciones
+            // del mercado
+            gasPrice = gasPrice.multiply(BigInteger.valueOf(125)).divide(BigInteger.valueOf(100));
             BigInteger gasLimit = BigInteger.valueOf(300_000L);
 
             // Crear transaccion sin procesar
@@ -73,18 +79,18 @@ public class Web3Service {
                     gasPrice,
                     gasLimit,
                     contractAddress,
-                    encodedFunction
-            );
+                    encodedFunction);
 
-            // Firmar transaccion
-            byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+            // Firmar transaccion con proteccion EIP-155 (Chain ID)
+            byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, chainId, credentials);
             String hexValue = Numeric.toHexString(signedMessage);
 
             // Enviar transaccion
             EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
 
             if (ethSendTransaction.hasError()) {
-                throw new RuntimeException("Error en transaccion blockchain: " + ethSendTransaction.getError().getMessage());
+                throw new RuntimeException(
+                        "Error en transaccion blockchain: " + ethSendTransaction.getError().getMessage());
             }
 
             String transactionHash = ethSendTransaction.getTransactionHash();
@@ -98,7 +104,8 @@ public class Web3Service {
     }
 
     public String generateDeterministicWalletAddress(UUID userId) {
-        if (userId == null) return null;
+        if (userId == null)
+            return null;
         try {
             byte[] seed = Hash.sha3((masterSecret + userId.toString()).getBytes(StandardCharsets.UTF_8));
             ECKeyPair ecKeyPair = ECKeyPair.create(seed);

@@ -89,11 +89,11 @@ public class ContratoService {
         // Generación de cobros/pagos según tipo de contrato
         generarPlanDePagos(contrato, dto.getEspecificaciones());
 
-        // Notificar al propietario
+        // Notificar al cliente
         notificacionService.enviarNotificacion(
-                propietario.getId(),
+                cliente.getId(),
                 "Nueva propuesta de contrato",
-                "Tienes una nueva propuesta de contrato para " + publicacion.getTitulo(),
+                "Tienes una nueva propuesta de contrato para " + (publicacion != null ? publicacion.getTitulo() : "un inmueble"),
                 Map.of("type", "NEW_CONTRACT", "contratoId", contrato.getId().toString())
         );
 
@@ -138,11 +138,11 @@ public class ContratoService {
 
         contrato = contratoRepository.save(contrato);
 
-        // Notificar al cliente
+        // Notificar al propietario
         notificacionService.enviarNotificacion(
-                contrato.getCliente().getId(),
+                contrato.getPropietario().getId(),
                 "Contrato Firmado",
-                "Tu contrato para el inmueble " + contrato.getInmueble().getTipoInmueble() + " ya está vigente.",
+                "El contrato para el inmueble " + contrato.getInmueble().getTipoInmueble() + " ha sido firmado por el cliente.",
                 Map.of("type", "CONTRACT_SIGNED", "contratoId", contrato.getId().toString())
         );
 
@@ -150,12 +150,12 @@ public class ContratoService {
     }
 
     public List<ContratoResponseDTO> obtenerContratosPropietario(UUID propietarioId) {
-        return contratoRepository.findByPropietarioId(propietarioId)
+        return contratoRepository.findByPropietarioIdOrderByCreatedDateDesc(propietarioId)
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     public List<ContratoResponseDTO> obtenerContratosCliente(UUID clienteId) {
-        return contratoRepository.findByClienteId(clienteId)
+        return contratoRepository.findByClienteIdOrderByCreatedDateDesc(clienteId)
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 

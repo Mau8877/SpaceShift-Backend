@@ -13,8 +13,8 @@ import java.util.UUID;
 @Repository
 public interface ContratoRepository extends JpaRepository<Contrato, UUID> {
 
-    List<Contrato> findByPropietarioId(UUID propietarioId);
-    List<Contrato> findByClienteId(UUID clienteId);
+    List<Contrato> findByPropietarioIdOrderByCreatedDateDesc(UUID propietarioId);
+    List<Contrato> findByClienteIdOrderByCreatedDateDesc(UUID clienteId);
 
     @Query("SELECT COUNT(c) > 0 FROM Contrato c WHERE c.inmueble.id = :inmuebleId " +
            "AND c.estadoContrato = 'VIGENTE' " +
