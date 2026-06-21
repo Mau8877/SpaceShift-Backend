@@ -26,7 +26,16 @@ public class VideoPublicacion extends Auditable {
     private String urlVideo;
 
     @Column(name = "url_modelo_3d", length = 500)
-    private String urlModelo3D;
+    private String urlModelo3D; // Mantenemos por compatibilidad
+
+    @Column(name = "url_splat", length = 500)
+    private String urlSplat;
+
+    @Column(name = "url_json_modelo", length = 500)
+    private String urlJsonModelo;
+
+    @Column(name = "url_preview_webp", length = 500)
+    private String urlPreviewWebp;
 
     @Column(name = "duracion_segundos", nullable = false)
     private Integer duracionSegundos;
@@ -46,4 +55,7 @@ public class VideoPublicacion extends Auditable {
 
     @Column(name = "error_mensaje", columnDefinition = "TEXT")
     private String errorMensaje;
+
+    @Column(name = "runpod_job_id", length = 100)
+    private String runpodJobId;
 }
