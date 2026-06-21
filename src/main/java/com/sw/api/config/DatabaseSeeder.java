@@ -172,29 +172,109 @@ public class DatabaseSeeder implements ApplicationRunner {
     }
 
     private void seedPublicacion(UUID usuarioId, SeedPublication publicacion) {
-        boolean existe = exists(
+        // Buscar la publicación existente (idempotencia) o crearla junto con su inmueble/ubicación.
+        UUID publicacionId = findUuid(
                 """
-                        SELECT COUNT(*)
+                        SELECT id
                         FROM publicacion
                         WHERE id_usuario = ?
                           AND titulo = ?
                           AND deleted = FALSE
                         """,
                 usuarioId,
-                publicacion.getTitulo());
+                publicacion.getTitulo())
+                .orElse(null);
+
+        if (publicacionId == null) {
+            UUID inmuebleId = createInmueble(publicacion.getInmueble());
+            createUbicacion(inmuebleId, publicacion.getUbicacion());
+
+            publicacionId = createPublicacion(usuarioId, inmuebleId, publicacion);
+
+            if (publicacion.getImagenUrl() != null && !publicacion.getImagenUrl().isBlank()) {
+                createImagenPublicacion(publicacionId, publicacion.getImagenUrl());
+            }
+        }
+
+        // Sembrar videos (idempotente por nombre de archivo) aunque la publicación ya exista,
+        // para que el equipo pueda probar el visor 3D con datos pre-cargados.
+        if (publicacion.getVideos() != null) {
+            for (SeedVideo video : publicacion.getVideos()) {
+                seedVideo(publicacionId, usuarioId, video);
+            }
+        }
+    }
+
+    private void seedVideo(UUID publicacionId, UUID usuarioId, SeedVideo video) {
+        boolean existe = exists(
+                """
+                        SELECT COUNT(*)
+                        FROM video_publicacion
+                        WHERE id_publicacion = ?
+                          AND nombre_archivo = ?
+                          AND deleted = FALSE
+                        """,
+                publicacionId,
+                video.getNombreArchivo());
 
         if (existe) {
             return;
         }
 
-        UUID inmuebleId = createInmueble(publicacion.getInmueble());
-        createUbicacion(inmuebleId, publicacion.getUbicacion());
-
-        UUID publicacionId = createPublicacion(usuarioId, inmuebleId, publicacion);
-
-        if (publicacion.getImagenUrl() != null && !publicacion.getImagenUrl().isBlank()) {
-            createImagenPublicacion(publicacionId, publicacion.getImagenUrl());
+        // El modelo llega en el mismo campo (assets.model); decidimos la columna por extensión,
+        // igual que VideoService.asignarModelo.
+        String urlModelo = video.getUrlModelo();
+        String urlSplat = null;
+        String urlSog = null;
+        if (urlModelo != null) {
+            String lower = urlModelo.toLowerCase();
+            if (lower.endsWith(".sog")) {
+                urlSog = urlModelo;
+            } else if (lower.endsWith(".splat")) {
+                urlSplat = urlModelo;
+            }
         }
+
+        String estado = video.getEstado() != null && !video.getEstado().isBlank()
+                ? video.getEstado()
+                : "COMPLETADO";
+
+        jdbcTemplate.update(
+                """
+                        INSERT INTO video_publicacion (
+                            id,
+                            id_publicacion,
+                            id_usuario,
+                            url_video,
+                            url_modelo_3d,
+                            url_splat,
+                            url_sog,
+                            url_json_modelo,
+                            url_preview_webp,
+                            duracion_segundos,
+                            creditos_consumidos,
+                            estado_procesamiento,
+                            nombre_archivo,
+                            tamano_bytes,
+                            runpod_job_id
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                UUID.randomUUID(),
+                publicacionId,
+                usuarioId,
+                video.getUrlVideo(),
+                urlModelo,
+                urlSplat,
+                urlSog,
+                video.getUrlMetadata(),
+                video.getUrlPreview(),
+                video.getDuracionSegundos(),
+                video.getCreditosConsumidos(),
+                estado,
+                video.getNombreArchivo(),
+                video.getTamanoBytes(),
+                video.getRunpodJobId());
     }
 
     private UUID createInmueble(SeedInmueble inmueble) {
@@ -337,6 +417,21 @@ public class DatabaseSeeder implements ApplicationRunner {
         private String imagenUrl;
         private SeedInmueble inmueble;
         private SeedUbicacion ubicacion;
+        private List<SeedVideo> videos = new ArrayList<>();
+    }
+
+    @Data
+    public static class SeedVideo {
+        private String nombreArchivo;
+        private String urlVideo;        // URL/key del video original en S3 (referencial)
+        private String urlModelo;       // assets.model: .splat o .sog (se mapea por extensión)
+        private String urlMetadata;     // assets.metadata: _meta.json
+        private String urlPreview;      // assets.preview: _preview.webp
+        private Integer duracionSegundos = 0;
+        private Integer creditosConsumidos = 0;
+        private Long tamanoBytes = 0L;
+        private String estado;          // Por defecto COMPLETADO
+        private String runpodJobId;
     }
 
     @Data
