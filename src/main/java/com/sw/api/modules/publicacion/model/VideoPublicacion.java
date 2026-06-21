@@ -1,5 +1,6 @@
 package com.sw.api.modules.publicacion.model;
 
+import com.sw.api.modules.usuario.model.Usuario;
 import com.sw.api.shared.model.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,6 +23,10 @@ public class VideoPublicacion extends Auditable {
     @JoinColumn(name = "id_publicacion", nullable = false)
     private Publicacion publicacion;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario")
+    private Usuario usuario; // Usuario que pagó/procesó el video (para reembolsos)
+
     @Column(name = "url_video", nullable = false, length = 500)
     private String urlVideo;
 
@@ -30,6 +35,9 @@ public class VideoPublicacion extends Auditable {
 
     @Column(name = "url_splat", length = 500)
     private String urlSplat;
+
+    @Column(name = "url_sog", length = 500)
+    private String urlSog;
 
     @Column(name = "url_json_modelo", length = 500)
     private String urlJsonModelo;

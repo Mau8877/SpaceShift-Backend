@@ -10,6 +10,7 @@ public record VideoResponseDTO(
     String urlVideo,
     String urlModelo3D,
     String urlSplat,
+    String urlSog,
     String urlJsonModelo,
     String urlPreviewWebp,
     Integer duracionSegundos,
