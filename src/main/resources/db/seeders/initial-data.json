@@ -41,7 +41,21 @@
                         "direccionExacta": "Av. San Martin, zona Equipetrol",
                         "latitud": "-17.7678",
                         "longitud": "-63.1969"
-                    }
+                    },
+                    "videos": [
+                        {
+                            "nombreArchivo": "recorrido_casa_equipetrol.mp4",
+                            "urlVideo": "videos/8ecd3319-f2fb-4527-8250-a308bff74736.mp4",
+                            "urlModelo": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/8ecd3319-f2fb-4527-8250-a308bff74736-u2.splat",
+                            "urlMetadata": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/8ecd3319-f2fb-4527-8250-a308bff74736-u2_meta.json",
+                            "urlPreview": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/8ecd3319-f2fb-4527-8250-a308bff74736-u2_preview.webp",
+                            "duracionSegundos": 15,
+                            "creditosConsumidos": 30,
+                            "tamanoBytes": 15485760,
+                            "estado": "COMPLETADO",
+                            "runpodJobId": "8ecd3319-f2fb-4527-8250-a308bff74736-u2"
+                        }
+                    ]
                 },
                 {
                     "titulo": "Departamento moderno cerca del centro",
@@ -66,7 +80,21 @@
                         "direccionExacta": "Calle Libertad, zona centro",
                         "latitud": "-17.7833",
                         "longitud": "-63.1821"
-                    }
+                    },
+                    "videos": [
+                        {
+                            "nombreArchivo": "recorrido_departamento_centro.mp4",
+                            "urlVideo": "videos/92c4301f-f093-4729-b589-95418e56a15a.mp4",
+                            "urlModelo": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/92c4301f-f093-4729-b589-95418e56a15a-u2.sog",
+                            "urlMetadata": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/92c4301f-f093-4729-b589-95418e56a15a-u2_meta.json",
+                            "urlPreview": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/92c4301f-f093-4729-b589-95418e56a15a-u2_preview.webp",
+                            "duracionSegundos": 20,
+                            "creditosConsumidos": 40,
+                            "tamanoBytes": 20971520,
+                            "estado": "COMPLETADO",
+                            "runpodJobId": "92c4301f-f093-4729-b589-95418e56a15a-u2"
+                        }
+                    ]
                 }
             ]
         },
