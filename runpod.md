@@ -6,6 +6,26 @@ Este documento detalla el flujo de integración desde la subida de un video (Fro
 
 ## Flujo de Trabajo
 
+### Paso 0 (Opcional): Cotizar el procesamiento
+**`GET /api/videos/cotizar?duracionSegundos=15`**
+
+Antes de procesar, el frontend puede consultar cuánto costará y si el usuario tiene saldo suficiente. **No debita créditos.** Requiere token JWT.
+
+**Respuesta Exitosa (200 OK):**
+```json
+{
+  "duracionSegundos": 15,
+  "factorPorSegundo": 2,
+  "costoCreditos": 30,
+  "saldoActual": 1000,
+  "saldoSuficiente": true
+}
+```
+
+> **Acción del Frontend:** Mostrar `costoCreditos` al usuario. Si acepta y `saldoSuficiente` es `true`, continuar con el Paso 1 → 2.
+
+---
+
 ### Paso 1: Solicitar URL Pre-firmada de S3
 **`GET /api/videos/upload-url`**
 
@@ -88,11 +108,14 @@ En cuanto pase a estado `COMPLETADO`, las URLs de los recursos 3D (Splat, JSON y
   "id": "11111111...",
   "estadoProcesamiento": "COMPLETADO",
   "urlSplat": "https://..._u2.splat",
+  "urlSog": "https://..._u2.sog",
   "urlJsonModelo": "https://..._meta.json",
   "urlPreviewWebp": "https://..._preview.webp",
   ...
 }
 ```
+
+> El modelo viene en `output.assets.model` de Runpod. Según su extensión se guarda en `urlSplat` (`.splat`) o en `urlSog` (`.sog`); solo uno estará poblado por video. `urlModelo3D` mantiene la URL del modelo por compatibilidad.
 
 **C. Fallo en el Servidor / Video Inválido:**
 Si Runpod falla (movimiento brusco, video muy oscuro), el estado pasará a `FALLIDO`. Los tokens cobrados **ya habrán sido reembolsados automáticamente al usuario**.

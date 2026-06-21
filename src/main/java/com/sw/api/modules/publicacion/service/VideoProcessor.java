@@ -55,9 +55,10 @@ public class VideoProcessor {
             if (video != null) {
                 video.setEstadoProcesamiento(EstadoProcesamiento.FALLIDO);
                 video.setErrorMensaje("No se pudo iniciar el trabajo en Runpod: " + e.getMessage());
-                
+
+                UUID idReembolso = video.getUsuario() != null ? video.getUsuario().getId() : usuarioId;
                 tokenService.acreditarCreditos(
-                        usuarioId,
+                        idReembolso,
                         video.getCreditosConsumidos(),
                         "Reembolso por fallo en inicio de procesamiento: " + video.getNombreArchivo(),
                         TipoTransaccion.REEMBOLSO

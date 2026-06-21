@@ -1,5 +1,6 @@
 package com.sw.api.modules.publicacion.controller;
 
+import com.sw.api.modules.publicacion.dto.CotizacionResponseDTO;
 import com.sw.api.modules.publicacion.dto.VideoResponseDTO;
 import com.sw.api.modules.publicacion.dto.VideoUploadRequestDTO;
 import com.sw.api.modules.publicacion.model.VideoPublicacion;
@@ -33,6 +34,15 @@ public class VideoController {
     public ResponseEntity<UploadUrlResponse> getUploadUrl(@RequestParam(defaultValue = ".mp4") String extension) {
         UploadUrlResponse response = s3Service.generatePresignedPutUrl(extension);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Cotizar procesamiento", description = "Devuelve el costo en créditos de procesar un video de la duración indicada y si el usuario tiene saldo suficiente. No debita créditos.")
+    @GetMapping("/cotizar")
+    public ResponseEntity<CotizacionResponseDTO> cotizar(
+            @RequestParam Integer duracionSegundos,
+            Authentication authentication) {
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        return ResponseEntity.ok(videoService.cotizar(duracionSegundos, usuario.getId()));
     }
 
     @Operation(summary = "Paso 2: Registrar video y procesar", description = "Verifica saldo, cobra tokens e inicia la reconstrucción 3D en Runpod.")
@@ -81,6 +91,7 @@ public class VideoController {
                 video.getUrlVideo(),
                 video.getUrlModelo3D(),
                 video.getUrlSplat(),
+                video.getUrlSog(),
                 video.getUrlJsonModelo(),
                 video.getUrlPreviewWebp(),
                 video.getDuracionSegundos(),
