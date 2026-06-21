@@ -35,8 +35,8 @@ public class SecurityConfig {
                         // Dejamos públicas las rutas de registro, login, la documentación de Swagger, error, webhook de Stripe y paquetes
                         .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/ws-chat/**", "/error", "/api/webhooks/stripe", "/api/tokens/paquetes")
                         .permitAll()
-                        // Permitimos ver publicaciones e inmuebles sin estar logueado
-                        .requestMatchers(HttpMethod.GET, "/api/publicaciones/**", "/api/inmuebles/**")
+                        // Permitimos ver publicaciones, inmuebles y los modelos 3D (tour) sin estar logueado
+                        .requestMatchers(HttpMethod.GET, "/api/publicaciones/**", "/api/inmuebles/**", "/api/videos/publicaciones/**")
                         .permitAll()
                         .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/reportes/**").hasAuthority("ROLE_ADMIN")
