@@ -11,6 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sw.api.modules.video_processing.service.RunpodService;
+import com.sw.api.modules.video_processing.dto.RunpodResponse;
+import com.sw.api.modules.token.model.TipoTransaccion;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +27,7 @@ public class VideoService {
     private final PublicacionRepository publicacionRepository;
     private final TokenService tokenService;
     private final VideoProcessor videoProcessor;
+    private final RunpodService runpodService;
 
     private static final int CREDIT_FACTOR = 2; // 2 créditos por segundo de video
 
@@ -69,9 +74,47 @@ public class VideoService {
         return videoPublicacionRepository.findByPublicacionId(publicacionId);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public VideoPublicacion obtenerPorId(UUID videoId) {
-        return videoPublicacionRepository.findById(videoId)
+        VideoPublicacion video = videoPublicacionRepository.findById(videoId)
                 .orElseThrow(() -> new RuntimeException("Video no encontrado con ID: " + videoId));
+
+        // Polling: Si el video esta PROCESANDO y tiene un Job de Runpod, consultamos su estado real
+        if (video.getEstadoProcesamiento() == EstadoProcesamiento.PROCESANDO && video.getRunpodJobId() != null) {
+            try {
+                RunpodResponse response = runpodService.checkStatus(video.getRunpodJobId());
+                
+                if ("COMPLETED".equalsIgnoreCase(response.getStatus())) {
+                    video.setEstadoProcesamiento(EstadoProcesamiento.COMPLETADO);
+                    
+                    if (response.getOutput() != null && response.getOutput().getAssets() != null) {
+                        video.setUrlSplat(response.getOutput().getAssets().getModel());
+                        video.setUrlJsonModelo(response.getOutput().getAssets().getMetadata());
+                        video.setUrlPreviewWebp(response.getOutput().getAssets().getPreview());
+                        // Mantenemos esto por compatibilidad
+                        video.setUrlModelo3D(response.getOutput().getAssets().getModel());
+                    }
+                    
+                    videoPublicacionRepository.save(video);
+                    
+                } else if ("FAILED".equalsIgnoreCase(response.getStatus())) {
+                    video.setEstadoProcesamiento(EstadoProcesamiento.FALLIDO);
+                    video.setErrorMensaje("La reconstrucción 3D en Runpod falló.");
+                    
+                    // Reembolso automático
+                    tokenService.acreditarCreditos(
+                            video.getPublicacion().getUsuario().getId(),
+                            video.getCreditosConsumidos(),
+                            "Reembolso por fallo en Runpod: " + video.getNombreArchivo(),
+                            TipoTransaccion.REEMBOLSO
+                    );
+                    videoPublicacionRepository.save(video);
+                }
+            } catch (Exception e) {
+                log.error("Error consultando estado de Runpod para el Job {}", video.getRunpodJobId(), e);
+            }
+        }
+
+        return video;
     }
 }

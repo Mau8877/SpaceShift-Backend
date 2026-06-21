@@ -11,6 +11,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sw.api.modules.video_processing.service.RunpodService;
+import com.sw.api.modules.video_processing.service.S3Service;
+import com.sw.api.modules.video_processing.dto.RunpodResponse;
+
 import java.util.UUID;
 
 @Service
@@ -20,46 +24,46 @@ public class VideoProcessor {
 
     private final VideoPublicacionRepository videoPublicacionRepository;
     private final TokenService tokenService;
+    private final RunpodService runpodService;
+    private final S3Service s3Service;
 
     @Async
     @Transactional
     public void procesarVideo3DAsync(UUID videoId, UUID usuarioId) {
-        log.info("Iniciando procesamiento asíncrono del video: {}", videoId);
+        log.info("Iniciando procesamiento de Runpod para el video: {}", videoId);
         try {
-            // Simular el procesamiento pesado de reconstrucción 3D (15 segundos)
-            Thread.sleep(15000);
-
             VideoPublicacion video = videoPublicacionRepository.findById(videoId)
                     .orElseThrow(() -> new RuntimeException("Video no encontrado."));
 
-            // Simular un 90% de probabilidad de éxito
-            boolean exito = Math.random() < 0.9;
+            // 1. Generar Presigned GET URL
+            String presignedUrl = s3Service.generatePresignedGetUrl(video.getUrlVideo());
 
-            if (exito) {
-                video.setEstadoProcesamiento(EstadoProcesamiento.COMPLETADO);
-                video.setUrlModelo3D("https://res.cloudinary.com/demo/image/upload/spaceshift_gltf_sample.glb");
-                log.info("Procesamiento de video {} completado con éxito.", videoId);
-            } else {
+            // 2. Enviar a Runpod
+            RunpodResponse runpodResponse = runpodService.processVideo(presignedUrl);
+
+            // 3. Guardar el Job ID y dejar el estado en PROCESANDO
+            video.setRunpodJobId(runpodResponse.getId());
+            videoPublicacionRepository.save(video);
+            
+            log.info("Video {} enviado a Runpod. Job ID: {}", videoId, runpodResponse.getId());
+
+        } catch (Exception e) {
+            log.error("Error inesperado al enviar a Runpod el video {}. Reembolsando tokens.", videoId, e);
+            
+            // Si falla el envío a Runpod, reembolsamos
+            VideoPublicacion video = videoPublicacionRepository.findById(videoId).orElse(null);
+            if (video != null) {
                 video.setEstadoProcesamiento(EstadoProcesamiento.FALLIDO);
-                video.setErrorMensaje("La reconstrucción 3D falló. Posible causa: Movimiento de cámara demasiado rápido o falta de iluminación en la escena.");
-                log.error("Procesamiento de video {} falló. Iniciando reembolso.", videoId);
-
-                // Reembolsar créditos consumidos
+                video.setErrorMensaje("No se pudo iniciar el trabajo en Runpod: " + e.getMessage());
+                
                 tokenService.acreditarCreditos(
                         usuarioId,
                         video.getCreditosConsumidos(),
-                        "Reembolso por fallo en renderizado de video: " + video.getNombreArchivo(),
+                        "Reembolso por fallo en inicio de procesamiento: " + video.getNombreArchivo(),
                         TipoTransaccion.REEMBOLSO
                 );
+                videoPublicacionRepository.save(video);
             }
-
-            videoPublicacionRepository.save(video);
-
-        } catch (InterruptedException e) {
-            log.error("El procesamiento de video fue interrumpido.", e);
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            log.error("Error inesperado en el procesamiento de video.", e);
         }
     }
 }

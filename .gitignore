@@ -43,3 +43,5 @@ src/main/resources/firebase-service-account.json
 plan_back_chat.md
 
 schema_creacion_tablas.sql
+.env.example
+notificaciones.md
