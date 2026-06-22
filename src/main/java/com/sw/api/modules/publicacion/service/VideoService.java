@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.sw.api.modules.video_processing.service.RunpodService;
 import com.sw.api.modules.video_processing.dto.RunpodResponse;
@@ -88,8 +90,20 @@ public class VideoService {
 
         VideoPublicacion videoGuardado = videoPublicacionRepository.save(video);
 
-        // Disparar procesamiento asíncrono
-        videoProcessor.procesarVideo3DAsync(videoGuardado.getId(), usuarioId);
+        // Disparar el procesamiento asíncrono SOLO después de que la transacción haga commit.
+        // Si lo lanzáramos aquí directamente, el hilo @Async podría ejecutarse antes del commit
+        // y no encontrar la fila recién insertada (race condition).
+        final UUID videoId = videoGuardado.getId();
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    videoProcessor.procesarVideo3DAsync(videoId, usuarioId);
+                }
+            });
+        } else {
+            videoProcessor.procesarVideo3DAsync(videoId, usuarioId);
+        }
 
         return videoGuardado;
     }
