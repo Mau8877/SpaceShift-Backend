@@ -58,7 +58,41 @@
                         "habitaciones": 3,
                         "banos": 2,
                         "garajes": 1,
-                        "antiguedadAnios": 4
+                        "antiguedadAnios": 4,
+                        "condiciones": "1. Prohibido fumar dentro del departamento.\n2. Horas de silencio de 22:00 a 08:00.\n3. No exceder consumo eléctrico excesivo en AC.",
+                        "multasSanciones": "1. Fumar: Multa de 150 USD.\n2. Ruido en horas de silencio: Corte de altavoz inteligente.\n3. Abuso AC: Apagado automático.",
+                        "dispositivos": [
+                            {
+                                "id": "d1a8c9e0-1c3b-4c2d-9e8a-1a2b3c4d5e6f",
+                                "nombre": "Jacuzzi Inteligente",
+                                "precio": 15.0,
+                                "tipoPrecio": "POR_DIA",
+                                "configuracionTiempo": "HORARIO",
+                                "horarioInicio": "08:00",
+                                "horarioFin": "21:00",
+                                "descripcion": "Acceso al Jacuzzi con control desde el móvil."
+                            },
+                            {
+                                "id": "d2b9d0f1-2d4c-5d3e-0f9b-2b3c4d5e6f7a",
+                                "nombre": "Altavoz Inteligente Alexa",
+                                "precio": 3.0,
+                                "tipoPrecio": "POR_DIA",
+                                "configuracionTiempo": "HORARIO",
+                                "horarioInicio": "08:00",
+                                "horarioFin": "22:00",
+                                "descripcion": "Control de música y luces por voz."
+                            },
+                            {
+                                "id": "d3c0e1a2-3e5d-6e4f-1a0c-3c4d5e6f7a8b",
+                                "nombre": "Consola de Juegos VR",
+                                "precio": 8.0,
+                                "tipoPrecio": "POR_DIA",
+                                "configuracionTiempo": "LIBRE",
+                                "horarioInicio": "00:00",
+                                "horarioFin": "23:59",
+                                "descripcion": "Set de realidad virtual VR en la sala."
+                            }
+                        ]
                     },
                     "ubicacion": {
                         "ciudad": "Santa Cruz",

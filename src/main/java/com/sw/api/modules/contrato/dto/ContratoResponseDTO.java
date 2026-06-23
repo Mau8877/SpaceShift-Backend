@@ -35,6 +35,9 @@ public class ContratoResponseDTO {
     private String documentoUrl;
     private String observacion;
     private Map<String, Object> especificaciones;
+    private java.util.List<java.util.Map<String, Object>> dispositivosInmueble;
+    private String condicionesInmueble;
+    private String multasSancionesInmueble;
     private LocalDateTime createdDate;
     private LocalDateTime createdAt;
     private String transactionHash;

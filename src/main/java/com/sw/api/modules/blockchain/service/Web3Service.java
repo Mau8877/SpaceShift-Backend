@@ -43,7 +43,15 @@ public class Web3Service {
     private final Web3j web3j;
     private final Credentials credentials;
 
-    public String registerPropertyContractOnChain(String propertyId, String tenantWalletAddress) {
+    public String registerPropertyContractOnChain(
+            String propertyId,
+            String tenantWalletAddress,
+            String conditions,
+            String penalties,
+            String rentedDevices,
+            BigInteger devicePrice,
+            BigInteger rentalDays,
+            String contractContentHash) {
         if (contractAddress == null || contractAddress.isEmpty()) {
             log.warn("Direccion del Smart Contract no configurada. Saltando registro en Blockchain.");
             return null;
@@ -58,10 +66,19 @@ public class Web3Service {
                     credentials.getAddress(), DefaultBlockParameterName.LATEST).send();
             BigInteger nonce = ethGetTransactionCount.getTransactionCount();
 
-            // Construir la llamada a la funcion: createPropertyContract(string, address)
+            // Construir la llamada a la funcion: createPropertyContract(string, address, string, string, string, uint256, uint256, string)
             Function function = new Function(
                     "createPropertyContract",
-                    Arrays.asList(new Utf8String(propertyId), new Address(tenantWalletAddress)),
+                    Arrays.asList(
+                            new Utf8String(propertyId),
+                            new Address(tenantWalletAddress),
+                            new Utf8String(conditions != null ? conditions : ""),
+                            new Utf8String(penalties != null ? penalties : ""),
+                            new Utf8String(rentedDevices != null ? rentedDevices : ""),
+                            new org.web3j.abi.datatypes.generated.Uint256(devicePrice != null ? devicePrice : BigInteger.ZERO),
+                            new org.web3j.abi.datatypes.generated.Uint256(rentalDays != null ? rentalDays : BigInteger.ZERO),
+                            new Utf8String(contractContentHash != null ? contractContentHash : "")
+                    ),
                     Collections.emptyList());
 
             String encodedFunction = FunctionEncoder.encode(function);
@@ -71,7 +88,7 @@ public class Web3Service {
             // Multiplicar por 1.25 para asegurar que supere el mínimo y evitar variaciones
             // del mercado
             gasPrice = gasPrice.multiply(BigInteger.valueOf(125)).divide(BigInteger.valueOf(100));
-            BigInteger gasLimit = BigInteger.valueOf(300_000L);
+            BigInteger gasLimit = BigInteger.valueOf(700_000L);
 
             // Crear transaccion sin procesar
             RawTransaction rawTransaction = RawTransaction.createTransaction(

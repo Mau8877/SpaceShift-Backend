@@ -1,5 +1,9 @@
 package com.sw.api.modules.contrato.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sw.api.modules.contrato.dto.ContratoRequestDTO;
 import com.sw.api.modules.contrato.dto.ContratoResponseDTO;
 import com.sw.api.modules.contrato.model.*;
@@ -19,6 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -36,6 +44,7 @@ public class ContratoService {
     private final NotificacionService notificacionService;
     private final PerfilRepository perfilRepository;
     private final Web3Service web3Service;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public ContratoResponseDTO crearContrato(ContratoRequestDTO dto) {
@@ -101,12 +110,50 @@ public class ContratoService {
     }
 
     @Transactional
-    public ContratoResponseDTO firmarContrato(UUID contratoId) {
+    public ContratoResponseDTO firmarContrato(UUID contratoId, com.sw.api.modules.contrato.dto.FirmaContratoRequestDTO dto) {
         Contrato contrato = contratoRepository.findById(contratoId)
                 .orElseThrow(() -> new IllegalArgumentException("Contrato no encontrado"));
 
         if (contrato.getEstadoContrato() != EstadoContrato.PENDIENTE_FIRMA) {
             throw new IllegalStateException("El contrato no está en estado de firma pendiente");
+        }
+
+        // Si viene el DTO con dispositivos seleccionados
+        if (dto != null) {
+            if (dto.getDispositivosAlquilados() != null) {
+                if (contrato.getEspecificaciones() == null) {
+                    contrato.setEspecificaciones(new HashMap<>());
+                }
+                // Guardar la lista de dispositivos seleccionados en especificaciones
+                contrato.getEspecificaciones().put("dispositivos_alquilados", dto.getDispositivosAlquilados());
+                
+                // Calcular y guardar el precio total de dispositivos en especificaciones
+                BigDecimal totalDispositivos = BigDecimal.ZERO;
+                for (Map<String, Object> disp : dto.getDispositivosAlquilados()) {
+                    try {
+                        Object precioObj = disp.get("precio");
+                        Object diasObj = disp.get("diasUso");
+                        if (precioObj != null && diasObj != null) {
+                            BigDecimal precio = new BigDecimal(precioObj.toString());
+                            BigDecimal dias = new BigDecimal(diasObj.toString());
+                            totalDispositivos = totalDispositivos.add(precio.multiply(dias));
+                        }
+                    } catch (Exception ex) {
+                        // ignore error
+                    }
+                }
+                contrato.getEspecificaciones().put("precio_dispositivos_total", totalDispositivos);
+            }
+            if (dto.getMontoAcordado() != null && dto.getMontoAcordado().compareTo(BigDecimal.ZERO) > 0) {
+                contrato.setMontoAcordado(dto.getMontoAcordado());
+                
+                // Borrar cobros viejos de mensualidades / cuotas del plan de pagos provisional
+                List<PagoContrato> pagosViejos = pagoContratoRepository.findByContratoIdOrderByFechaVencimientoAsc(contrato.getId());
+                pagoContratoRepository.deleteAll(pagosViejos);
+                
+                // Regenerar plan de pagos con el nuevo monto total
+                generarPlanDePagos(contrato, contrato.getEspecificaciones());
+            }
         }
 
         contrato.setEstadoContrato(EstadoContrato.VIGENTE);
@@ -123,9 +170,29 @@ public class ContratoService {
 
             // Intentar registrar el contrato en la Blockchain
             try {
+                if (contrato.getEspecificaciones() == null) {
+                    contrato.setEspecificaciones(new HashMap<>());
+                }
+                Map<String, Object> blockchainSnapshot = buildBlockchainSnapshot(contrato);
+                String contractContentHash = calculateSha256(canonicalJson(blockchainSnapshot));
+                contrato.getEspecificaciones().put("contenidoContratoHash", contractContentHash);
+
+                String conditions = getSpecAsString(contrato.getEspecificaciones(), "reglasContrato");
+                String penalties = getSpecAsString(contrato.getEspecificaciones(), "sancionesContrato");
+                String rentedDevices = getDevicesForBlockchain(contrato.getEspecificaciones());
+                BigDecimal devicePriceVal = calculateContractDevicesTotal(contrato.getEspecificaciones());
+                long rentalDays = contrato.getNoches() != null ? contrato.getNoches().longValue() : 0;
+                BigInteger devicePriceWei = devicePriceVal.multiply(BigDecimal.valueOf(100)).toBigInteger(); // cents precision
+
                 String txHash = web3Service.registerPropertyContractOnChain(
                         contrato.getId().toString(),
-                        finalWallet
+                        finalWallet,
+                        conditions,
+                        penalties,
+                        rentedDevices,
+                        devicePriceWei,
+                        BigInteger.valueOf(rentalDays),
+                        contractContentHash
                 );
                 if (txHash != null) {
                     contrato.setTransactionHash(txHash);
@@ -270,6 +337,96 @@ public class ContratoService {
         }
     }
 
+    private Map<String, Object> buildBlockchainSnapshot(Contrato contrato) {
+        Map<String, Object> specs = contrato.getEspecificaciones() != null ? contrato.getEspecificaciones() : Map.of();
+        Map<String, Object> snapshot = new TreeMap<>();
+        snapshot.put("contratoId", contrato.getId().toString());
+        snapshot.put("inmuebleId", contrato.getInmueble().getId().toString());
+        snapshot.put("publicacionId", contrato.getPublicacion() != null ? contrato.getPublicacion().getId().toString() : null);
+        snapshot.put("propietarioId", contrato.getPropietario().getId().toString());
+        snapshot.put("clienteId", contrato.getCliente().getId().toString());
+        snapshot.put("tipoContrato", contrato.getTipoContrato().name());
+        snapshot.put("montoAcordado", contrato.getMontoAcordado());
+        snapshot.put("moneda", contrato.getMoneda());
+        snapshot.put("fechaInicio", contrato.getFechaInicio());
+        snapshot.put("fechaFin", contrato.getFechaFin());
+        snapshot.put("reglasContrato", specs.getOrDefault("reglasContrato", ""));
+        snapshot.put("sancionesContrato", specs.getOrDefault("sancionesContrato", ""));
+        snapshot.put("dispositivosContrato", specs.getOrDefault("dispositivosContrato", specs.getOrDefault("dispositivos_alquilados", List.of())));
+        return snapshot;
+    }
+
+    private String getSpecAsString(Map<String, Object> specs, String key) {
+        Object value = specs != null ? specs.get(key) : null;
+        return value != null ? value.toString() : "";
+    }
+
+    private String getDevicesForBlockchain(Map<String, Object> specs) throws JsonProcessingException {
+        if (specs == null) return "";
+        Object devices = specs.getOrDefault("dispositivosContrato", specs.get("dispositivos_alquilados"));
+        return devices != null ? canonicalJson(devices) : "";
+    }
+
+    @SuppressWarnings("unchecked")
+    private BigDecimal calculateContractDevicesTotal(Map<String, Object> specs) {
+        if (specs == null) return BigDecimal.ZERO;
+
+        Object devicesObj = specs.get("dispositivosContrato");
+        if (devicesObj instanceof List<?> devices) {
+            return devices.stream()
+                    .filter(Map.class::isInstance)
+                    .map(device -> calculateNewDeviceTotal((Map<String, Object>) device))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        Object legacyTotal = specs.get("precio_dispositivos_total");
+        if (legacyTotal != null) {
+            try {
+                return new BigDecimal(legacyTotal.toString());
+            } catch (NumberFormatException ignored) {
+                return BigDecimal.ZERO;
+            }
+        }
+
+        return BigDecimal.ZERO;
+    }
+
+    private BigDecimal calculateNewDeviceTotal(Map<String, Object> device) {
+        BigDecimal price = toBigDecimal(device.get("precioContrato"));
+        BigDecimal quantity = toBigDecimal(device.getOrDefault("cantidad", 1));
+        return price.multiply(quantity);
+    }
+
+    private BigDecimal toBigDecimal(Object value) {
+        if (value == null) return BigDecimal.ZERO;
+        try {
+            return new BigDecimal(value.toString());
+        } catch (NumberFormatException ex) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private String canonicalJson(Object value) throws JsonProcessingException {
+        ObjectMapper canonicalMapper = objectMapper.copy()
+                .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
+                .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+        return canonicalMapper.writeValueAsString(value);
+    }
+
+    private String calculateSha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 no disponible", e);
+        }
+    }
+
     private ContratoResponseDTO mapToResponse(Contrato c) {
         ContratoResponseDTO dto = new ContratoResponseDTO();
         dto.setId(c.getId());
@@ -303,6 +460,9 @@ public class ContratoService {
         dto.setDocumentoUrl(c.getDocumentoUrl());
         dto.setObservacion(c.getObservacion());
         dto.setEspecificaciones(c.getEspecificaciones());
+        dto.setDispositivosInmueble(c.getInmueble().getDispositivos());
+        dto.setCondicionesInmueble(c.getInmueble().getCondiciones());
+        dto.setMultasSancionesInmueble(c.getInmueble().getMultasSanciones());
         dto.setCreatedDate(c.getCreatedDate());
         dto.setCreatedAt(c.getCreatedDate());
         dto.setTransactionHash(c.getTransactionHash());
