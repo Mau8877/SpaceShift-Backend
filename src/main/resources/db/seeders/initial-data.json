@@ -44,16 +44,31 @@
                     },
                     "videos": [
                         {
-                            "nombreArchivo": "recorrido_casa_equipetrol.mp4",
-                            "urlVideo": "videos/8ecd3319-f2fb-4527-8250-a308bff74736.mp4",
-                            "urlModelo": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/8ecd3319-f2fb-4527-8250-a308bff74736-u2.splat",
-                            "urlMetadata": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/8ecd3319-f2fb-4527-8250-a308bff74736-u2_meta.json",
-                            "urlPreview": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/8ecd3319-f2fb-4527-8250-a308bff74736-u2_preview.webp",
-                            "duracionSegundos": 15,
-                            "creditosConsumidos": 30,
-                            "tamanoBytes": 15485760,
-                            "estado": "COMPLETADO",
-                            "runpodJobId": "8ecd3319-f2fb-4527-8250-a308bff74736-u2"
+                            "nombreArchivo": "garden-7k.splat",
+                            "urlVideo": "videos/garden-7k-source.mp4",
+                            "urlModelo": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/garden-7k.splat",
+                            "duracionSegundos": 18,
+                            "creditosConsumidos": 36,
+                            "tamanoBytes": 140356544,
+                            "estado": "COMPLETADO"
+                        },
+                        {
+                            "nombreArchivo": "playroom-7k.splat",
+                            "urlVideo": "videos/playroom-7k-source.mp4",
+                            "urlModelo": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/playroom-7k.splat",
+                            "duracionSegundos": 14,
+                            "creditosConsumidos": 28,
+                            "tamanoBytes": 55507424,
+                            "estado": "COMPLETADO"
+                        },
+                        {
+                            "nombreArchivo": "room-7k.splat",
+                            "urlVideo": "videos/room-7k-source.mp4",
+                            "urlModelo": "https://workflowdesigner-016696895571-us-east-1-an.s3.us-east-1.amazonaws.com/models/room-7k.splat",
+                            "duracionSegundos": 12,
+                            "creditosConsumidos": 24,
+                            "tamanoBytes": 36164000,
+                            "estado": "COMPLETADO"
                         }
                     ]
                 },
