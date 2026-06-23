@@ -3,6 +3,7 @@ package com.sw.api.modules.publicacion.controller;
 import com.sw.api.modules.publicacion.dto.CotizacionResponseDTO;
 import com.sw.api.modules.publicacion.dto.VideoResponseDTO;
 import com.sw.api.modules.publicacion.dto.VideoUploadRequestDTO;
+import com.sw.api.modules.publicacion.model.Formato3D;
 import com.sw.api.modules.publicacion.model.VideoPublicacion;
 import com.sw.api.modules.publicacion.service.VideoService;
 import com.sw.api.modules.video_processing.service.S3Service;
@@ -36,13 +37,14 @@ public class VideoController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Cotizar procesamiento", description = "Devuelve el costo en créditos de procesar un video de la duración indicada y si el usuario tiene saldo suficiente. No debita créditos.")
+    @Operation(summary = "Cotizar procesamiento", description = "Devuelve el costo en créditos de procesar un video de la duración y formato indicados y si el usuario tiene saldo suficiente. SPLAT cuesta 1.5x respecto a SOG. No debita créditos.")
     @GetMapping("/cotizar")
     public ResponseEntity<CotizacionResponseDTO> cotizar(
             @RequestParam Integer duracionSegundos,
+            @RequestParam(required = false, defaultValue = "SOG") Formato3D formato,
             Authentication authentication) {
         Usuario usuario = (Usuario) authentication.getPrincipal();
-        return ResponseEntity.ok(videoService.cotizar(duracionSegundos, usuario.getId()));
+        return ResponseEntity.ok(videoService.cotizar(duracionSegundos, formato, usuario.getId()));
     }
 
     @Operation(summary = "Paso 2: Registrar video y procesar", description = "Verifica saldo, cobra tokens e inicia la reconstrucción 3D en Runpod.")
@@ -59,6 +61,7 @@ public class VideoController {
                     dto.nombreArchivo(),
                     dto.tamanoBytes(),
                     dto.duracionSegundos(),
+                    dto.formato(),
                     usuario.getId()
             );
             return new ResponseEntity<>(mapToDTO(video), HttpStatus.CREATED);

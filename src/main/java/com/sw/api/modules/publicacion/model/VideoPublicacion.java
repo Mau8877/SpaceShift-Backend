@@ -66,4 +66,10 @@ public class VideoPublicacion extends Auditable {
 
     @Column(name = "runpod_job_id", length = 100)
     private String runpodJobId;
+
+    // Formato de salida elegido al generar el recorrido. Determina el costo y el
+    // endpoint de Runpod usado. Nullable: los videos previos se tratan como SOG.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "formato", length = 20)
+    private Formato3D formato;
 }
