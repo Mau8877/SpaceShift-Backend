@@ -17,6 +17,16 @@ public class Inmueble extends Auditable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "dispositivos", columnDefinition = "jsonb")
+    private java.util.List<java.util.Map<String, Object>> dispositivos;
+
+    @Column(name = "condiciones", columnDefinition = "TEXT")
+    private String condiciones;
+
+    @Column(name = "multas_sanciones", columnDefinition = "TEXT")
+    private String multasSanciones;
+
     @Column(name = "tipo_inmueble", nullable = false)
     private String tipoInmueble;
 

@@ -51,6 +51,10 @@ public class InmuebleService {
         inmueble.setGarajes(dto.garajes());
         inmueble.setAntiguedadAnios(dto.antiguedadAnios());
 
+        inmueble.setDispositivos(dto.dispositivos());
+        inmueble.setCondiciones(dto.condiciones());
+        inmueble.setMultasSanciones(dto.multasSanciones());
+
         if (dto.ubicacion() != null) {
             Ubicacion ubi = new Ubicacion();
             ubi.setCiudad(dto.ubicacion().ciudad());
@@ -93,6 +97,12 @@ public class InmuebleService {
             inmueble.setGarajes(dto.garajes());
         if (dto.antiguedadAnios() != null)
             inmueble.setAntiguedadAnios(dto.antiguedadAnios());
+        if (dto.dispositivos() != null)
+            inmueble.setDispositivos(dto.dispositivos());
+        if (dto.condiciones() != null)
+            inmueble.setCondiciones(dto.condiciones());
+        if (dto.multasSanciones() != null)
+            inmueble.setMultasSanciones(dto.multasSanciones());
 
         if (dto.ubicacion() != null) {
             Ubicacion ubi = inmueble.getUbicacion();
@@ -141,6 +151,9 @@ public class InmuebleService {
                 inmueble.getBanos(),
                 inmueble.getGarajes(),
                 inmueble.getAntiguedadAnios(),
-                ubiDTO);
+                ubiDTO,
+                inmueble.getDispositivos(),
+                inmueble.getCondiciones(),
+                inmueble.getMultasSanciones());
     }
 }

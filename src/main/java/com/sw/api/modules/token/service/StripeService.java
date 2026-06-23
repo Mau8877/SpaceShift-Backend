@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -76,6 +77,41 @@ public class StripeService {
         // 3. Crear sesión en el API de Stripe y retornar su URL segura
         Session session = Session.create(params);
         log.info("[DEBUG - StripeService] Sesión de Stripe creada exitosamente. SessionId: {}, URL: {}", session.getId(), session.getUrl());
+        return session.getUrl();
+    }
+
+    public String createCheckoutSessionForPayment(UUID usuarioId, UUID pagoId, BigDecimal precio, String moneda, String nombre) throws StripeException {
+        log.info("[DEBUG - StripeService] Generando sesión de Stripe para Pago de Contrato. usuarioId: {}, pagoId: {}, precio: {} {}",
+                usuarioId, pagoId, precio, moneda);
+
+        SessionCreateParams params = SessionCreateParams.builder()
+                .setMode(SessionCreateParams.Mode.PAYMENT)
+                .setSuccessUrl(successUrl)
+                .setCancelUrl(cancelUrl)
+                .addLineItem(
+                        SessionCreateParams.LineItem.builder()
+                                .setQuantity(1L)
+                                .setPriceData(
+                                        SessionCreateParams.LineItem.PriceData.builder()
+                                                .setCurrency(moneda.toLowerCase())
+                                                .setUnitAmount((long) (precio.doubleValue() * 100))
+                                                .setProductData(
+                                                        SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                .setName(nombre)
+                                                                .setDescription("Pago de Contrato SpaceShift")
+                                                                .build()
+                                                )
+                                                .build()
+                                )
+                                .build()
+                )
+                .putMetadata("usuarioId", usuarioId.toString())
+                .putMetadata("pagoId", pagoId.toString())
+                .putMetadata("tipo", "CONTRATO_PAGO")
+                .build();
+
+        Session session = Session.create(params);
+        log.info("[DEBUG - StripeService] Sesión de Pago Contrato creada exitosamente. SessionId: {}, URL: {}", session.getId(), session.getUrl());
         return session.getUrl();
     }
 }

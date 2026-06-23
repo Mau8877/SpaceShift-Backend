@@ -172,37 +172,51 @@ public class DatabaseSeeder implements ApplicationRunner {
     }
 
     private void seedPublicacion(UUID usuarioId, SeedPublication publicacion) {
-        // Buscar la publicación existente (idempotencia) o crearla junto con su inmueble/ubicación.
-        UUID publicacionId = findUuid(
-                """
-                        SELECT id
-                        FROM publicacion
-                        WHERE id_usuario = ?
-                          AND titulo = ?
-                          AND deleted = FALSE
-                        """,
-                usuarioId,
-                publicacion.getTitulo())
-                .orElse(null);
+        Optional<SeededPublicationIds> existente = findPublicacionExistente(usuarioId, publicacion.getTitulo());
 
-        if (publicacionId == null) {
+        UUID publicacionId;
+        if (existente.isPresent()) {
+            SeededPublicationIds ids = existente.get();
+            updateInmueble(ids.inmuebleId(), publicacion.getInmueble());
+            upsertUbicacion(ids.inmuebleId(), publicacion.getUbicacion());
+            updatePublicacion(ids.publicacionId(), publicacion);
+            upsertImagenPublicacion(ids.publicacionId(), publicacion.getImagenUrl());
+            publicacionId = ids.publicacionId();
+        } else {
             UUID inmuebleId = createInmueble(publicacion.getInmueble());
-            createUbicacion(inmuebleId, publicacion.getUbicacion());
+            upsertUbicacion(inmuebleId, publicacion.getUbicacion());
 
             publicacionId = createPublicacion(usuarioId, inmuebleId, publicacion);
 
-            if (publicacion.getImagenUrl() != null && !publicacion.getImagenUrl().isBlank()) {
-                createImagenPublicacion(publicacionId, publicacion.getImagenUrl());
-            }
+            upsertImagenPublicacion(publicacionId, publicacion.getImagenUrl());
         }
 
-        // Sembrar videos (idempotente por nombre de archivo) aunque la publicación ya exista,
+        // Sembrar videos (idempotente por nombre de archivo) aunque la publicación ya
+        // exista,
         // para que el equipo pueda probar el visor 3D con datos pre-cargados.
         if (publicacion.getVideos() != null) {
             for (SeedVideo video : publicacion.getVideos()) {
                 seedVideo(publicacionId, usuarioId, video);
             }
         }
+    }
+
+    private Optional<SeededPublicationIds> findPublicacionExistente(UUID usuarioId, String titulo) {
+        List<SeededPublicationIds> ids = jdbcTemplate.query(
+                """
+                        SELECT id, id_inmueble
+                        FROM publicacion
+                        WHERE id_usuario = ?
+                          AND titulo = ?
+                          AND deleted = FALSE
+                        """,
+                (rs, rowNum) -> new SeededPublicationIds(
+                        (UUID) rs.getObject("id"),
+                        (UUID) rs.getObject("id_inmueble")),
+                usuarioId,
+                titulo);
+
+        return ids.stream().findFirst();
     }
 
     private void seedVideo(UUID publicacionId, UUID usuarioId, SeedVideo video) {
@@ -221,7 +235,8 @@ public class DatabaseSeeder implements ApplicationRunner {
             return;
         }
 
-        // El modelo llega en el mismo campo (assets.model); decidimos la columna por extensión,
+        // El modelo llega en el mismo campo (assets.model); decidimos la columna por
+        // extensión,
         // igual que VideoService.asignarModelo.
         String urlModelo = video.getUrlModelo();
         String urlSplat = null;
@@ -278,6 +293,15 @@ public class DatabaseSeeder implements ApplicationRunner {
     }
 
     private UUID createInmueble(SeedInmueble inmueble) {
+        String dispJson = null;
+        try {
+            if (inmueble.getDispositivos() != null) {
+                dispJson = objectMapper.writeValueAsString(inmueble.getDispositivos());
+            }
+        } catch (Exception e) {
+            System.err.println("Error serializando dispositivos del seed: " + e.getMessage());
+        }
+
         return insertUuid(
                 """
                         INSERT INTO inmueble (
@@ -287,9 +311,12 @@ public class DatabaseSeeder implements ApplicationRunner {
                             habitaciones,
                             banos,
                             garajes,
-                            antiguedad_anios
+                            antiguedad_anios,
+                            dispositivos,
+                            condiciones,
+                            multas_sanciones
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?)
                         RETURNING id
                         """,
                 inmueble.getTipoInmueble(),
@@ -298,10 +325,52 @@ public class DatabaseSeeder implements ApplicationRunner {
                 inmueble.getHabitaciones(),
                 inmueble.getBanos(),
                 inmueble.getGarajes(),
-                inmueble.getAntiguedadAnios());
+                inmueble.getAntiguedadAnios(),
+                dispJson,
+                inmueble.getCondiciones(),
+                inmueble.getMultasSanciones());
     }
 
-    private void createUbicacion(UUID inmuebleId, SeedUbicacion ubicacion) {
+    private void updateInmueble(UUID inmuebleId, SeedInmueble inmueble) {
+        String dispJson = null;
+        try {
+            if (inmueble.getDispositivos() != null) {
+                dispJson = objectMapper.writeValueAsString(inmueble.getDispositivos());
+            }
+        } catch (Exception e) {
+            System.err.println("Error serializando dispositivos del seed: " + e.getMessage());
+        }
+
+        jdbcTemplate.update(
+                """
+                        UPDATE inmueble
+                        SET tipo_inmueble = ?,
+                            area_terreno = ?,
+                            area_construida = ?,
+                            habitaciones = ?,
+                            banos = ?,
+                            garajes = ?,
+                            antiguedad_anios = ?,
+                            dispositivos = ?::jsonb,
+                            condiciones = ?,
+                            multas_sanciones = ?,
+                            last_modified_date = NOW()
+                        WHERE id = ?
+                        """,
+                inmueble.getTipoInmueble(),
+                inmueble.getAreaTerreno(),
+                inmueble.getAreaConstruida(),
+                inmueble.getHabitaciones(),
+                inmueble.getBanos(),
+                inmueble.getGarajes(),
+                inmueble.getAntiguedadAnios(),
+                dispJson,
+                inmueble.getCondiciones(),
+                inmueble.getMultasSanciones(),
+                inmuebleId);
+    }
+
+    private void upsertUbicacion(UUID inmuebleId, SeedUbicacion ubicacion) {
         jdbcTemplate.update(
                 """
                         INSERT INTO ubicacion (
@@ -313,6 +382,14 @@ public class DatabaseSeeder implements ApplicationRunner {
                             longitud
                         )
                         VALUES (?, ?, ?, ?, ?, ?)
+                        ON CONFLICT (id_inmueble)
+                        DO UPDATE SET
+                            ciudad = EXCLUDED.ciudad,
+                            zona_barrios = EXCLUDED.zona_barrios,
+                            direccion_exacta = EXCLUDED.direccion_exacta,
+                            latitud = EXCLUDED.latitud,
+                            longitud = EXCLUDED.longitud,
+                            last_modified_date = NOW()
                         """,
                 inmuebleId,
                 ubicacion.getCiudad(),
@@ -348,7 +425,56 @@ public class DatabaseSeeder implements ApplicationRunner {
                 publicacion.getEstadoPublicacion());
     }
 
-    private void createImagenPublicacion(UUID publicacionId, String imagenUrl) {
+    private void updatePublicacion(UUID publicacionId, SeedPublication publicacion) {
+        jdbcTemplate.update(
+                """
+                        UPDATE publicacion
+                        SET descripcion_general = ?,
+                            tipo_transaccion = ?,
+                            precio = ?,
+                            moneda = ?,
+                            estado_publicacion = ?,
+                            last_modified_date = NOW()
+                        WHERE id = ?
+                        """,
+                publicacion.getDescripcionGeneral(),
+                publicacion.getTipoTransaccion(),
+                publicacion.getPrecio(),
+                publicacion.getMoneda(),
+                publicacion.getEstadoPublicacion(),
+                publicacionId);
+    }
+
+    private void upsertImagenPublicacion(UUID publicacionId, String imagenUrl) {
+        if (imagenUrl == null || imagenUrl.isBlank()) {
+            return;
+        }
+
+        boolean existePortada = exists(
+                """
+                        SELECT COUNT(*)
+                        FROM imagen_publicacion
+                        WHERE id_publicacion = ?
+                          AND es_portada = TRUE
+                          AND deleted = FALSE
+                        """,
+                publicacionId);
+
+        if (existePortada) {
+            jdbcTemplate.update(
+                    """
+                            UPDATE imagen_publicacion
+                            SET url_image = ?,
+                                last_modified_date = NOW()
+                            WHERE id_publicacion = ?
+                              AND es_portada = TRUE
+                              AND deleted = FALSE
+                            """,
+                    imagenUrl,
+                    publicacionId);
+            return;
+        }
+
         jdbcTemplate.update(
                 """
                         INSERT INTO imagen_publicacion (
@@ -384,6 +510,9 @@ public class DatabaseSeeder implements ApplicationRunner {
     private boolean exists(String sql, Object... params) {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, params);
         return count != null && count > 0;
+    }
+
+    private record SeededPublicationIds(UUID publicacionId, UUID inmuebleId) {
     }
 
     @Data
@@ -423,14 +552,14 @@ public class DatabaseSeeder implements ApplicationRunner {
     @Data
     public static class SeedVideo {
         private String nombreArchivo;
-        private String urlVideo;        // URL/key del video original en S3 (referencial)
-        private String urlModelo;       // assets.model: .splat o .sog (se mapea por extensión)
-        private String urlMetadata;     // assets.metadata: _meta.json
-        private String urlPreview;      // assets.preview: _preview.webp
+        private String urlVideo; // URL/key del video original en S3 (referencial)
+        private String urlModelo; // assets.model: .splat o .sog (se mapea por extensión)
+        private String urlMetadata; // assets.metadata: _meta.json
+        private String urlPreview; // assets.preview: _preview.webp
         private Integer duracionSegundos = 0;
         private Integer creditosConsumidos = 0;
         private Long tamanoBytes = 0L;
-        private String estado;          // Por defecto COMPLETADO
+        private String estado; // Por defecto COMPLETADO
         private String runpodJobId;
     }
 
@@ -443,6 +572,9 @@ public class DatabaseSeeder implements ApplicationRunner {
         private Integer banos;
         private Integer garajes;
         private Integer antiguedadAnios;
+        private Object dispositivos;
+        private String condiciones;
+        private String multasSanciones;
     }
 
     @Data

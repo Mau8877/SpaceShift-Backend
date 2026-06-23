@@ -10,5 +10,8 @@ public record InmuebleRequestDTO(
     Integer banos,
     Integer garajes,
     Integer antiguedadAnios,
-    UbicacionDTO ubicacion
+    UbicacionDTO ubicacion,
+    java.util.List<java.util.Map<String, Object>> dispositivos,
+    String condiciones,
+    String multasSanciones
 ) {}
