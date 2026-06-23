@@ -110,12 +110,21 @@ public class ContratoService {
     }
 
     @Transactional
-    public ContratoResponseDTO firmarContrato(UUID contratoId, com.sw.api.modules.contrato.dto.FirmaContratoRequestDTO dto) {
+    public ContratoResponseDTO firmarContrato(UUID contratoId, com.sw.api.modules.contrato.dto.FirmaContratoRequestDTO dto, UUID usuarioId) {
         Contrato contrato = contratoRepository.findById(contratoId)
                 .orElseThrow(() -> new IllegalArgumentException("Contrato no encontrado"));
 
         if (contrato.getEstadoContrato() != EstadoContrato.PENDIENTE_FIRMA) {
             throw new IllegalStateException("El contrato no está en estado de firma pendiente");
+        }
+
+        // Validar que se haya realizado algún pago ( Stripe, Efectivo, etc. )
+        boolean tienePagoCompletado = pagoContratoRepository.findByContratoIdOrderByFechaVencimientoAsc(contratoId)
+                .stream()
+                .anyMatch(pago -> pago.getEstadoPago() == EstadoPago.COMPLETADO);
+
+        if (!tienePagoCompletado) {
+            throw new IllegalStateException("Debes realizar el pago correspondiente antes de firmar el contrato.");
         }
 
         // Si viene el DTO con dispositivos seleccionados
@@ -156,7 +165,47 @@ public class ContratoService {
             }
         }
 
-        contrato.setEstadoContrato(EstadoContrato.VIGENTE);
+        boolean isCliente = usuarioId.equals(contrato.getCliente().getId());
+        boolean isPropietario = usuarioId.equals(contrato.getPropietario().getId());
+
+        if (!isCliente && !isPropietario) {
+            throw new IllegalArgumentException("Usuario no autorizado para firmar este contrato.");
+        }
+
+        if (contrato.getEspecificaciones() == null) {
+            contrato.setEspecificaciones(new HashMap<>());
+        }
+
+        boolean shouldActivate = false;
+
+        if (contrato.getTipoContrato() == TipoContrato.VENTA) {
+            if (isCliente) {
+                contrato.getEspecificaciones().put("firmaCliente", true);
+            }
+            if (isPropietario) {
+                contrato.getEspecificaciones().put("firmaPropietario", true);
+            }
+
+            boolean clienteFirmado = Boolean.TRUE.equals(contrato.getEspecificaciones().get("firmaCliente"));
+            boolean propietarioFirmado = Boolean.TRUE.equals(contrato.getEspecificaciones().get("firmaPropietario"));
+
+            if (clienteFirmado && propietarioFirmado) {
+                shouldActivate = true;
+            } else {
+                contrato = contratoRepository.save(contrato);
+                return mapToResponse(contrato);
+            }
+        } else {
+            if (!isCliente) {
+                throw new IllegalStateException("Solo el cliente puede firmar digitalmente este tipo de contrato.");
+            }
+            contrato.getEspecificaciones().put("firmaCliente", true);
+            shouldActivate = true;
+        }
+
+        if (shouldActivate) {
+            contrato.setEstadoContrato(EstadoContrato.VIGENTE);
+        }
 
         // Generar wallet determinista del inquilino
         String targetWallet = web3Service.generateDeterministicWalletAddress(contrato.getCliente().getId());

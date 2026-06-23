@@ -80,14 +80,42 @@ public class StripeService {
         return session.getUrl();
     }
 
-    public String createCheckoutSessionForPayment(UUID usuarioId, UUID pagoId, BigDecimal precio, String moneda, String nombre) throws StripeException {
-        log.info("[DEBUG - StripeService] Generando sesión de Stripe para Pago de Contrato. usuarioId: {}, pagoId: {}, precio: {} {}",
-                usuarioId, pagoId, precio, moneda);
+    public String createCheckoutSessionForPayment(UUID usuarioId, UUID pagoId, UUID contratoId, UUID publicacionId, BigDecimal precio, String moneda, String nombre, String originUrl) throws StripeException {
+        log.info("[DEBUG - StripeService] Generando sesión de Stripe para Pago de Contrato. usuarioId: {}, pagoId: {}, precio: {} {}, originUrl: {}",
+                usuarioId, pagoId, precio, moneda, originUrl);
+
+        String dynamicSuccessUrl = successUrl;
+        if (originUrl != null && !originUrl.isBlank() && successUrl != null && successUrl.contains("/profile")) {
+            String pathAndQuery = successUrl.substring(successUrl.indexOf("/profile"));
+            dynamicSuccessUrl = originUrl + pathAndQuery;
+        }
+        if (dynamicSuccessUrl != null && dynamicSuccessUrl.contains("/profile")) {
+            if (publicacionId != null) {
+                dynamicSuccessUrl = dynamicSuccessUrl.replace("/profile", "/crear-oferta/" + publicacionId) + "&contratoId=" + contratoId;
+            } else {
+                dynamicSuccessUrl = dynamicSuccessUrl.replace("/profile", "/dashboard/contratos/" + contratoId);
+            }
+        }
+
+        String dynamicCancelUrl = cancelUrl;
+        if (originUrl != null && !originUrl.isBlank() && cancelUrl != null && cancelUrl.contains("/profile")) {
+            String pathAndQuery = cancelUrl.substring(cancelUrl.indexOf("/profile"));
+            dynamicCancelUrl = originUrl + pathAndQuery;
+        }
+        if (dynamicCancelUrl != null && dynamicCancelUrl.contains("/profile")) {
+            if (publicacionId != null) {
+                dynamicCancelUrl = dynamicCancelUrl.replace("/profile", "/crear-oferta/" + publicacionId) + "&contratoId=" + contratoId;
+            } else {
+                dynamicCancelUrl = dynamicCancelUrl.replace("/profile", "/dashboard/contratos/" + contratoId);
+            }
+        }
+
+        log.info("[DEBUG - StripeService] URLs de redirección calculadas para Stripe: successUrl={}, cancelUrl={}", dynamicSuccessUrl, dynamicCancelUrl);
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl(successUrl)
-                .setCancelUrl(cancelUrl)
+                .setSuccessUrl(dynamicSuccessUrl)
+                .setCancelUrl(dynamicCancelUrl)
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setQuantity(1L)

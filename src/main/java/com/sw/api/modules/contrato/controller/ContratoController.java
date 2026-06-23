@@ -36,7 +36,7 @@ public class ContratoController {
             @PathVariable UUID id,
             @RequestBody(required = false) com.sw.api.modules.contrato.dto.FirmaContratoRequestDTO dto,
             @AuthenticationPrincipal Usuario usuario) {
-        return ResponseEntity.ok(contratoService.firmarContrato(id, dto));
+        return ResponseEntity.ok(contratoService.firmarContrato(id, dto, usuario.getId()));
     }
 
     @GetMapping("/{id}")

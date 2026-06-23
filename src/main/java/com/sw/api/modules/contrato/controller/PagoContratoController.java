@@ -54,8 +54,9 @@ public class PagoContratoController {
     @PostMapping("/pagos/{id}/stripe-checkout")
     public ResponseEntity<Map<String, String>> generarSesionPagoStripe(
             @PathVariable UUID id,
+            @RequestParam(value = "originUrl", required = false) String originUrl,
             @AuthenticationPrincipal Usuario usuario) throws Exception {
-        String sessionUrl = pagoContratoService.generarSesionPagoStripe(id, usuario.getId());
+        String sessionUrl = pagoContratoService.generarSesionPagoStripe(id, usuario.getId(), originUrl);
         Map<String, String> response = new HashMap<>();
         response.put("stripeCheckoutUrl", sessionUrl);
         return ResponseEntity.ok(response);

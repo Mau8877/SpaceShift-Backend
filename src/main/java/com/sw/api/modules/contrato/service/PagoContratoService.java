@@ -111,7 +111,7 @@ public class PagoContratoService {
         return mapToResponse(pago);
     }
 
-    public String generarSesionPagoStripe(UUID pagoId, UUID usuarioId) throws Exception {
+    public String generarSesionPagoStripe(UUID pagoId, UUID usuarioId, String originUrl) throws Exception {
         PagoContrato pago = pagoContratoRepository.findById(pagoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pago no encontrado"));
 
@@ -126,12 +126,20 @@ public class PagoContratoService {
             concept = "Pago de cuota - Compraventa Inmueble";
         }
 
+        UUID publicacionId = null;
+        if (pago.getContrato().getPublicacion() != null) {
+            publicacionId = pago.getContrato().getPublicacion().getId();
+        }
+
         return stripeService.createCheckoutSessionForPayment(
                 usuarioId,
                 pago.getId(),
+                pago.getContrato().getId(),
+                publicacionId,
                 pago.getMonto(),
                 pago.getMoneda(),
-                concept
+                concept,
+                originUrl
         );
     }
 
