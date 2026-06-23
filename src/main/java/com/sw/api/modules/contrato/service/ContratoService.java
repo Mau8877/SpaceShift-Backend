@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sw.api.modules.contrato.dto.ContratoRequestDTO;
 import com.sw.api.modules.contrato.dto.ContratoResponseDTO;
+import com.sw.api.modules.contrato.dto.DashboardClientResponseDTO;
 import com.sw.api.modules.contrato.model.*;
 import com.sw.api.modules.contrato.repository.ContratoRepository;
 import com.sw.api.modules.contrato.repository.PagoContratoRepository;
@@ -17,10 +18,12 @@ import com.sw.api.modules.publicacion.repository.PublicacionRepository;
 import com.sw.api.modules.usuario.model.Usuario;
 import com.sw.api.modules.usuario.repository.UsuarioRepository;
 import com.sw.api.modules.usuario.repository.PerfilRepository;
+import com.sw.api.modules.usuario.model.Perfil;
 import com.sw.api.modules.blockchain.service.Web3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -540,5 +543,70 @@ public class ContratoService {
         contrato.setEstadoContrato(EstadoContrato.CANCELADO);
         contrato = contratoRepository.save(contrato);
         return mapToResponse(contrato);
+    }
+
+    public List<DashboardClientResponseDTO> obtenerClientesDePropietario(UUID propietarioId) {
+        List<Contrato> contratos = contratoRepository.findByPropietarioIdOrderByCreatedDateDesc(propietarioId);
+        
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        
+        return contratos.stream().map(c -> {
+            String clientName = "Cliente";
+            String clientEmail = c.getCliente().getCorreo();
+            String clientPhone = "";
+
+            Perfil perfilCliente = perfilRepository.findByUsuarioId(c.getCliente().getId()).orElse(null);
+            if (perfilCliente != null) {
+                clientName = perfilCliente.getNombre() + " " + (perfilCliente.getApellido() != null ? perfilCliente.getApellido() : "");
+                clientName = clientName.trim();
+                clientPhone = perfilCliente.getTelefono() != null ? perfilCliente.getTelefono() : "";
+            }
+
+            String codigoContrato = "CTR-" + c.getTipoContrato().name().substring(0, 3) + "-" + c.getId().toString().substring(0, 8).toUpperCase();
+            
+            LocalDateTime lastAct = c.getLastModifiedDate() != null ? c.getLastModifiedDate() : c.getCreatedDate();
+            String ultimaAct = lastAct != null ? lastAct.format(formatter) : "";
+
+            boolean contratoPorVencer = false;
+            if (c.getEstadoContrato() == EstadoContrato.VIGENTE && c.getFechaFin() != null) {
+                long days = ChronoUnit.DAYS.between(LocalDate.now(), c.getFechaFin());
+                if (days >= 0 && days <= 30) {
+                    contratoPorVencer = true;
+                }
+            }
+
+            DashboardClientResponseDTO dto = DashboardClientResponseDTO.builder()
+                    .id(c.getCliente().getId().toString())
+                    .nombre(clientName)
+                    .correo(clientEmail)
+                    .telefono(clientPhone)
+                    .tipoCliente(mapTipoCliente(c.getTipoContrato()))
+                    .estado(mapEstadoCliente(c.getEstadoContrato()))
+                    .inmueble(c.getPublicacion() != null ? c.getPublicacion().getTitulo() : "Propiedad " + c.getInmueble().getTipoInmueble())
+                    .contrato(codigoContrato)
+                    .tipoContrato(c.getTipoContrato().name())
+                    .fechaInicio(c.getFechaInicio() != null ? c.getFechaInicio().toString() : "")
+                    .fechaFin(c.getFechaFin() != null ? c.getFechaFin().toString() : "")
+                    .ultimaActividad(ultimaAct)
+                    .moneda(c.getMoneda())
+                    .montoContrato(c.getMontoAcordado())
+                    .contratoPorVencer(contratoPorVencer)
+                    .build();
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    private String mapTipoCliente(TipoContrato tipo) {
+        if (tipo == TipoContrato.ALQUILER) return "INQUILINO";
+        if (tipo == TipoContrato.VENTA) return "COMPRADOR";
+        if (tipo == TipoContrato.ALOJAMIENTO) return "HUESPED";
+        if (tipo == TipoContrato.ANTICRETICO) return "ANTICRESISTA";
+        return "INQUILINO";
+    }
+
+    private String mapEstadoCliente(EstadoContrato estado) {
+        if (estado == EstadoContrato.VIGENTE) return "ACTIVO";
+        if (estado == EstadoContrato.PENDIENTE_FIRMA) return "PENDIENTE";
+        return "HISTORICO";
     }
 }

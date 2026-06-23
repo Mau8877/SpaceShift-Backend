@@ -5,6 +5,10 @@ import com.sw.api.modules.contrato.service.PagoContratoService;
 import com.sw.api.modules.usuario.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,5 +64,20 @@ public class PagoContratoController {
         Map<String, String> response = new HashMap<>();
         response.put("stripeCheckoutUrl", sessionUrl);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/pagos/{id}/recibo")
+    public ResponseEntity<byte[]> descargarRecibo(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Usuario usuario) {
+        byte[] pdfBytes = pagoContratoService.generarPdfReciboPago(id, usuario.getId());
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename("Recibo_Pago_" + id + ".pdf")
+                .build());
+        
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }
