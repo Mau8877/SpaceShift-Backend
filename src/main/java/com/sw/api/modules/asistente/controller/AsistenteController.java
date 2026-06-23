@@ -18,7 +18,7 @@ public class AsistenteController {
     /** Proxy al LLM: recibe el mensaje del usuario y devuelve la respuesta. */
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
-        return ResponseEntity.ok(asistenteService.chat(request.message()));
+        return ResponseEntity.ok(asistenteService.chat(request.message(), request.pagina()));
     }
 
     /** Token efímero de Azure Speech para el lip-sync en el navegador. */

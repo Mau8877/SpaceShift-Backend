@@ -1,5 +1,6 @@
 package com.sw.api.modules.asistente.service;
 
+import com.sw.api.modules.asistente.config.AsistenteContext;
 import com.sw.api.modules.asistente.dto.ChatResponse;
 import com.sw.api.modules.asistente.dto.OpenRouterResponse;
 import com.sw.api.modules.asistente.dto.SpeechTokenResponse;
@@ -23,12 +24,6 @@ import java.util.Map;
 @Service
 public class AsistenteService {
 
-    /** Fuente de verdad del system prompt del asistente (antes vivía en el frontend). */
-    private static final String BASE_SYSTEM_PROMPT = """
-            Eres el asistente virtual de soporte de SpaceShift. Ayuda al usuario de forma clara y concisa.
-            Responde en el idioma del usuario. Máximo 3 oraciones salvo que el usuario pida más detalle.
-            IMPORTANTE: No uses markdown, asteriscos, almohadillas ni emojis — tu respuesta se leerá en voz alta.""";
-
     private final RestTemplate restTemplate;
 
     @Value("${openrouter.api.key}")
@@ -48,15 +43,22 @@ public class AsistenteService {
     }
 
     /** Reenvía la pregunta del usuario a OpenRouter con el system prompt y la key del servidor. */
-    public ChatResponse chat(String message) {
+    public ChatResponse chat(String message, String pagina) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(openRouterKey);
 
+        // System prompt = conocimiento base + (si aplica) guía de la pantalla actual.
+        String systemPrompt = AsistenteContext.BASE_SYSTEM_PROMPT;
+        String guiaPagina = AsistenteContext.resolver(pagina);
+        if (guiaPagina != null) {
+            systemPrompt += "\n\nContexto de la pantalla actual: " + guiaPagina;
+        }
+
         Map<String, Object> body = Map.of(
                 "model", openRouterModel,
                 "messages", List.of(
-                        Map.of("role", "system", "content", BASE_SYSTEM_PROMPT),
+                        Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", message)),
                 "max_tokens", 300,
                 "temperature", 0.7);
