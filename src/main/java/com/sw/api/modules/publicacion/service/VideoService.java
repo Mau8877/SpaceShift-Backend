@@ -2,6 +2,7 @@ package com.sw.api.modules.publicacion.service;
 
 import com.sw.api.modules.publicacion.dto.CotizacionResponseDTO;
 import com.sw.api.modules.publicacion.model.EstadoProcesamiento;
+import com.sw.api.modules.publicacion.model.Formato3D;
 import com.sw.api.modules.publicacion.model.Publicacion;
 import com.sw.api.modules.publicacion.model.VideoPublicacion;
 import com.sw.api.modules.publicacion.repository.PublicacionRepository;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.sw.api.modules.video_processing.service.RunpodService;
 import com.sw.api.modules.video_processing.dto.RunpodResponse;
@@ -33,34 +36,50 @@ public class VideoService {
     private final VideoProcessor videoProcessor;
     private final RunpodService runpodService;
 
-    private static final int CREDIT_FACTOR = 2; // 2 créditos por segundo de video
+    private static final int CREDIT_FACTOR = 2; // 2 créditos por segundo de video (base SOG)
+    private static final double SPLAT_MULTIPLIER = 1.5; // SPLAT cuesta 1.5x respecto a SOG
 
     /**
-     * Calcula el costo de procesar un video de la duración indicada sin debitar créditos.
-     * Permite al frontend mostrar el precio antes de que el usuario confirme.
+     * Calcula el costo en créditos de un video según su duración y formato.
+     * SOG es el costo base; SPLAT aplica un recargo del 50% (1.5x).
+     */
+    private int calcularCosto(Integer duracionSegundos, Formato3D formato) {
+        int base = duracionSegundos * CREDIT_FACTOR;
+        if (formato == Formato3D.SPLAT) {
+            return (int) Math.round(base * SPLAT_MULTIPLIER);
+        }
+        return base;
+    }
+
+    /**
+     * Calcula el costo de procesar un video de la duración y formato indicados sin
+     * debitar créditos. Permite al frontend mostrar el precio antes de confirmar.
      */
     @Transactional(readOnly = true)
-    public CotizacionResponseDTO cotizar(Integer duracionSegundos, UUID usuarioId) {
-        int costoCreditos = duracionSegundos * CREDIT_FACTOR;
+    public CotizacionResponseDTO cotizar(Integer duracionSegundos, Formato3D formato, UUID usuarioId) {
+        Formato3D fmt = formato != null ? formato : Formato3D.SOG;
+        int costoCreditos = calcularCosto(duracionSegundos, fmt);
         int saldoActual = tokenService.obtenerSaldo(usuarioId);
         return new CotizacionResponseDTO(
                 duracionSegundos,
                 CREDIT_FACTOR,
                 costoCreditos,
                 saldoActual,
-                saldoActual >= costoCreditos
+                saldoActual >= costoCreditos,
+                fmt
         );
     }
 
     @Transactional
-    public VideoPublicacion registrarVideoParaProcesar(UUID publicacionId, String urlVideo, String nombreArchivo, Long tamanoBytes, Integer duracionSegundos, UUID usuarioId) {
+    public VideoPublicacion registrarVideoParaProcesar(UUID publicacionId, String urlVideo, String nombreArchivo, Long tamanoBytes, Integer duracionSegundos, Formato3D formato, UUID usuarioId) {
         Publicacion publicacion = publicacionRepository.findById(publicacionId)
                 .orElseThrow(() -> new RuntimeException("Publicación no encontrada."));
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
 
-        int costoCreditos = duracionSegundos * CREDIT_FACTOR;
+        Formato3D fmt = formato != null ? formato : Formato3D.SOG;
+        int costoCreditos = calcularCosto(duracionSegundos, fmt);
 
         if (!tokenService.verificarSaldo(usuarioId, costoCreditos)) {
             throw new RuntimeException("Saldo de créditos insuficiente. Costo requerido: " + costoCreditos + " créditos.");
@@ -84,12 +103,25 @@ public class VideoService {
                 .estadoProcesamiento(EstadoProcesamiento.PROCESANDO)
                 .nombreArchivo(nombreArchivo)
                 .tamanoBytes(tamanoBytes)
+                .formato(fmt)
                 .build();
 
         VideoPublicacion videoGuardado = videoPublicacionRepository.save(video);
 
-        // Disparar procesamiento asíncrono
-        videoProcessor.procesarVideo3DAsync(videoGuardado.getId(), usuarioId);
+        // Disparar el procesamiento asíncrono SOLO después de que la transacción haga commit.
+        // Si lo lanzáramos aquí directamente, el hilo @Async podría ejecutarse antes del commit
+        // y no encontrar la fila recién insertada (race condition).
+        final UUID videoId = videoGuardado.getId();
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    videoProcessor.procesarVideo3DAsync(videoId, usuarioId);
+                }
+            });
+        } else {
+            videoProcessor.procesarVideo3DAsync(videoId, usuarioId);
+        }
 
         return videoGuardado;
     }
@@ -107,7 +139,8 @@ public class VideoService {
         // Polling: Si el video esta PROCESANDO y tiene un Job de Runpod, consultamos su estado real
         if (video.getEstadoProcesamiento() == EstadoProcesamiento.PROCESANDO && video.getRunpodJobId() != null) {
             try {
-                RunpodResponse response = runpodService.checkStatus(video.getRunpodJobId());
+                boolean splat = video.getFormato() == Formato3D.SPLAT;
+                RunpodResponse response = runpodService.checkStatus(video.getRunpodJobId(), splat);
                 String status = response.getStatus();
 
                 if ("COMPLETED".equalsIgnoreCase(status)) {

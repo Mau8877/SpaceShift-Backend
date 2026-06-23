@@ -19,15 +19,28 @@ public class RunpodService {
     @Value("${runpod.api.key}")
     private String apiKey;
 
-    @Value("${runpod.endpoint.id}")
-    private String endpointId;
+    // Endpoint de Runpod para modelos .splat (mejor calidad, más pesado).
+    @Value("${runpod.endpoint.splat}")
+    private String splatEndpointId;
+
+    // Endpoint de Runpod para modelos .sog (más ligero).
+    @Value("${runpod.endpoint.sog}")
+    private String sogEndpointId;
 
     public RunpodService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public RunpodResponse processVideo(String videoUrl) {
-        String runpodUrl = "https://api.runpod.ai/v2/" + endpointId + "/run";
+    /**
+     * Resuelve el endpoint de Runpod según el formato. Si no se indica splat,
+     * se usa el endpoint de .sog (también el valor por defecto para videos previos).
+     */
+    private String resolveEndpointId(boolean splat) {
+        return splat ? splatEndpointId : sogEndpointId;
+    }
+
+    public RunpodResponse processVideo(String videoUrl, boolean splat) {
+        String runpodUrl = "https://api.runpod.ai/v2/" + resolveEndpointId(splat) + "/run";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -46,8 +59,8 @@ public class RunpodService {
         return response.getBody();
     }
 
-    public RunpodResponse checkStatus(String jobId) {
-        String runpodUrl = "https://api.runpod.ai/v2/" + endpointId + "/status/" + jobId;
+    public RunpodResponse checkStatus(String jobId, boolean splat) {
+        String runpodUrl = "https://api.runpod.ai/v2/" + resolveEndpointId(splat) + "/status/" + jobId;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(apiKey);

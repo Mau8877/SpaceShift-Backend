@@ -1,6 +1,7 @@
 package com.sw.api.modules.publicacion.service;
 
 import com.sw.api.modules.publicacion.model.EstadoProcesamiento;
+import com.sw.api.modules.publicacion.model.Formato3D;
 import com.sw.api.modules.publicacion.model.VideoPublicacion;
 import com.sw.api.modules.publicacion.repository.VideoPublicacionRepository;
 import com.sw.api.modules.token.model.TipoTransaccion;
@@ -38,8 +39,9 @@ public class VideoProcessor {
             // 1. Generar Presigned GET URL
             String presignedUrl = s3Service.generatePresignedGetUrl(video.getUrlVideo());
 
-            // 2. Enviar a Runpod
-            RunpodResponse runpodResponse = runpodService.processVideo(presignedUrl);
+            // 2. Enviar a Runpod (al endpoint correspondiente al formato elegido)
+            boolean splat = video.getFormato() == Formato3D.SPLAT;
+            RunpodResponse runpodResponse = runpodService.processVideo(presignedUrl, splat);
 
             // 3. Guardar el Job ID y dejar el estado en PROCESANDO
             video.setRunpodJobId(runpodResponse.getId());
