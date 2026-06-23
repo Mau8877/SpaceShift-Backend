@@ -6,6 +6,9 @@ import com.sw.api.modules.contrato.repository.PagoContratoRepository;
 import com.sw.api.modules.notificacion.service.NotificacionService;
 import com.sw.api.modules.token.service.StripeService;
 import com.sw.api.shared.service.CloudinaryService;
+import com.sw.api.modules.usuario.repository.PerfilRepository;
+import com.sw.api.modules.usuario.model.Perfil;
+import com.sw.api.modules.reporte.service.PdfGeneratorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +29,8 @@ public class PagoContratoService {
     private final CloudinaryService cloudinaryService;
     private final NotificacionService notificacionService;
     private final StripeService stripeService;
+    private final PerfilRepository perfilRepository;
+    private final PdfGeneratorService pdfGeneratorService;
 
     public List<PagoContratoResponseDTO> obtenerPagosDeContrato(UUID contratoId) {
         return pagoContratoRepository.findByContratoIdOrderByFechaVencimientoAsc(contratoId)
@@ -140,6 +145,51 @@ public class PagoContratoService {
                 pago.getMoneda(),
                 concept,
                 originUrl
+        );
+    }
+
+    public byte[] generarPdfReciboPago(UUID pagoId, UUID usuarioId) {
+        PagoContrato pago = pagoContratoRepository.findById(pagoId)
+                .orElseThrow(() -> new IllegalArgumentException("Pago no encontrado"));
+
+        if (pago.getEstadoPago() != EstadoPago.COMPLETADO) {
+            throw new IllegalStateException("El recibo solo está disponible para pagos completados.");
+        }
+
+        if (!pago.getContrato().getPropietario().getId().equals(usuarioId) &&
+                !pago.getContrato().getCliente().getId().equals(usuarioId)) {
+            throw new SecurityException("No tienes permisos para descargar el recibo de este pago.");
+        }
+
+        String clientName = "Cliente";
+        String clientEmail = pago.getContrato().getCliente().getCorreo();
+
+        Perfil perfilCliente = perfilRepository.findByUsuarioId(pago.getContrato().getCliente().getId()).orElse(null);
+        if (perfilCliente != null) {
+            clientName = perfilCliente.getNombre() + " " + (perfilCliente.getApellido() != null ? perfilCliente.getApellido() : "");
+            clientName = clientName.trim();
+        }
+
+        String concept = "Pago de mensualidad - Contrato " + pago.getContrato().getInmueble().getTipoInmueble();
+        if (pago.getTipoPago() == TipoPago.GARANTIA) {
+            concept = "Pago de garantía - Contrato " + pago.getContrato().getInmueble().getTipoInmueble();
+        } else if (pago.getTipoPago() == TipoPago.CUOTA_VENTA) {
+            concept = "Pago de cuota - Compraventa Inmueble";
+        } else if (pago.getTipoPago() == TipoPago.DEPOSITO_ANTICRETICO) {
+            concept = "Pago de depósito anticrético - Contrato " + pago.getContrato().getInmueble().getTipoInmueble();
+        }
+
+        String codigoContrato = "CTR-" + pago.getContrato().getTipoContrato().name().substring(0, 3) + "-" + pago.getContrato().getId().toString().substring(0, 8).toUpperCase();
+
+        return pdfGeneratorService.generarPdfReciboPago(
+                codigoContrato,
+                clientName,
+                clientEmail,
+                concept,
+                pago.getMonto(),
+                pago.getMoneda(),
+                pago.getStripePagoId(),
+                pago.getFechaPago()
         );
     }
 

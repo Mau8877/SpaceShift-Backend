@@ -18,9 +18,14 @@ import com.sw.api.modules.token.repository.PagoStripeRepository;
 import com.sw.api.modules.token.repository.PaqueteCreditoRepository;
 import com.sw.api.modules.usuario.model.Usuario;
 import com.sw.api.modules.usuario.repository.UsuarioRepository;
+import com.sw.api.modules.usuario.repository.PerfilRepository;
+import com.sw.api.modules.usuario.model.Perfil;
+import com.sw.api.modules.reporte.service.PdfGeneratorService;
+import com.sw.api.shared.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +45,10 @@ public class StripeWebhookService {
     private final TokenService tokenService;
     private final PagoContratoRepository pagoContratoRepository;
     private final NotificacionService notificacionService;
+    private final PerfilRepository perfilRepository;
+    private final PdfGeneratorService pdfGeneratorService;
+    private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Value("${stripe.webhook-secret}")
     private String webhookSecret;
@@ -94,6 +103,45 @@ public class StripeWebhookService {
 
         log.info("¡Pago de contrato completado vía Stripe con éxito! Pago ID: {}", pagoId);
 
+        // Generar recibo de pago PDF y enviar por email
+        try {
+            String clientName = "Cliente";
+            String clientEmail = pago.getContrato().getCliente().getCorreo();
+
+            Perfil perfilCliente = perfilRepository.findByUsuarioId(pago.getContrato().getCliente().getId()).orElse(null);
+            if (perfilCliente != null) {
+                clientName = perfilCliente.getNombre() + " " + (perfilCliente.getApellido() != null ? perfilCliente.getApellido() : "");
+                clientName = clientName.trim();
+            }
+
+            String concept = "Pago de mensualidad - Contrato " + pago.getContrato().getInmueble().getTipoInmueble();
+            if (pago.getTipoPago() == com.sw.api.modules.contrato.model.TipoPago.GARANTIA) {
+                concept = "Pago de garantía - Contrato " + pago.getContrato().getInmueble().getTipoInmueble();
+            } else if (pago.getTipoPago() == com.sw.api.modules.contrato.model.TipoPago.CUOTA_VENTA) {
+                concept = "Pago de cuota - Compraventa Inmueble";
+            } else if (pago.getTipoPago() == com.sw.api.modules.contrato.model.TipoPago.DEPOSITO_ANTICRETICO) {
+                concept = "Pago de depósito anticrético - Contrato " + pago.getContrato().getInmueble().getTipoInmueble();
+            }
+
+            String codigoContrato = "CTR-" + pago.getContrato().getTipoContrato().name().substring(0, 3) + "-" + pago.getContrato().getId().toString().substring(0, 8).toUpperCase();
+
+            byte[] pdfContent = pdfGeneratorService.generarPdfReciboPago(
+                    codigoContrato,
+                    clientName,
+                    clientEmail,
+                    concept,
+                    pago.getMonto(),
+                    pago.getMoneda(),
+                    stripeSessionId,
+                    pago.getFechaPago()
+            );
+
+            emailService.enviarReciboPago(clientEmail, clientName, pdfContent, concept);
+            log.info("Comprobante de pago PDF enviado por correo exitosamente a {}", clientEmail);
+        } catch (Exception e) {
+            log.error("Error al generar o enviar comprobante de pago PDF por correo", e);
+        }
+
         // Notificar al propietario y cliente
         notificacionService.enviarNotificacion(
                 pago.getContrato().getPropietario().getId(),
@@ -108,6 +156,31 @@ public class StripeWebhookService {
                 "Tu pago de " + pago.getMonto() + " " + pago.getMoneda() + " vía Stripe fue procesado con éxito.",
                 Map.of("type", "PAYMENT_APPROVED", "contratoId", pago.getContrato().getId().toString())
         );
+
+        // Notificar por WebSocket en tiempo real a ambos participantes
+        try {
+            messagingTemplate.convertAndSendToUser(
+                    pago.getContrato().getCliente().getCorreo(),
+                    "/queue/messages",
+                    Map.of(
+                            "type", "PAYMENT_APPROVED",
+                            "pagoId", pagoId.toString(),
+                            "contratoId", pago.getContrato().getId().toString()
+                    )
+            );
+            messagingTemplate.convertAndSendToUser(
+                    pago.getContrato().getPropietario().getCorreo(),
+                    "/queue/messages",
+                    Map.of(
+                            "type", "PAYMENT_APPROVED",
+                            "pagoId", pagoId.toString(),
+                            "contratoId", pago.getContrato().getId().toString()
+                    )
+            );
+            log.info("Notificación WebSocket de pago exitoso enviada al cliente y propietario.");
+        } catch (Exception e) {
+            log.error("Error al enviar notificación WebSocket de pago exitoso", e);
+        }
     }
 
     private void acreditarCompraSession(Session session) {

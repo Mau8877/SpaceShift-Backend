@@ -260,6 +260,46 @@ public class PdfGeneratorService {
         return out.toByteArray();
     }
 
+    public byte[] generarPdfReciboPago(
+            String codigoContrato,
+            String nombreCliente,
+            String correoCliente,
+            String concepto,
+            java.math.BigDecimal monto,
+            String moneda,
+            String stripePaymentId,
+            LocalDateTime fechaPago) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Document doc = new Document(PageSize.A4, 40, 40, 40, 40);
+        try {
+            PdfWriter.getInstance(doc, out);
+            doc.open();
+
+            addTitle(doc, "COMPROBANTE DE PAGO — SPACESHIFT");
+            addTimestamp(doc);
+
+            PdfPTable table = kvTable();
+            addKV(table, "Código de Contrato", codigoContrato);
+            addKV(table, "Cliente", nombreCliente);
+            addKV(table, "Correo Electrónico", correoCliente);
+            addKV(table, "Concepto de Pago", concepto);
+            addKV(table, "Monto Acreditado", moneda + " " + monto.toPlainString());
+            addKV(table, "ID Transacción Stripe", stripePaymentId != null ? stripePaymentId : "N/A");
+            addKV(table, "Fecha de Pago", fechaPago != null ? fechaPago.format(GEN_FMT) : LocalDateTime.now().format(GEN_FMT));
+            doc.add(table);
+
+            Paragraph footer = new Paragraph("\n\nGracias por confiar en SpaceShift. Este documento es un comprobante de transacción digital válido.", GEN_FONT);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            doc.add(footer);
+
+        } catch (DocumentException e) {
+            throw new RuntimeException("Error al generar PDF de recibo", e);
+        } finally {
+            doc.close();
+        }
+        return out.toByteArray();
+    }
+
     // -------------------------------------------------------------------------
     // HELPERS PRIVADOS
     // -------------------------------------------------------------------------

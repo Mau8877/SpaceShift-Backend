@@ -2,6 +2,7 @@ package com.sw.api.modules.contrato.controller;
 
 import com.sw.api.modules.contrato.dto.ContratoRequestDTO;
 import com.sw.api.modules.contrato.dto.ContratoResponseDTO;
+import com.sw.api.modules.contrato.dto.DashboardClientResponseDTO;
 import com.sw.api.modules.contrato.service.ContratoService;
 import com.sw.api.modules.usuario.model.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,12 @@ public class ContratoController {
     public ResponseEntity<List<ContratoResponseDTO>> obtenerContratosComoPropietario(
             @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(contratoService.obtenerContratosPropietario(usuario.getId()));
+    }
+
+    @GetMapping("/clientes")
+    public ResponseEntity<List<DashboardClientResponseDTO>> obtenerClientesDePropietario(
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(contratoService.obtenerClientesDePropietario(usuario.getId()));
     }
 
     @GetMapping("/cliente")
