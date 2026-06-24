@@ -124,7 +124,7 @@ public class ContratoService {
         // Validar que se haya realizado algún pago ( Stripe, Efectivo, etc. )
         boolean tienePagoCompletado = pagoContratoRepository.findByContratoIdOrderByFechaVencimientoAsc(contratoId)
                 .stream()
-                .anyMatch(pago -> pago.getEstadoPago() == EstadoPago.COMPLETADO);
+                .anyMatch(pago -> pago.getEstadoPago() == EstadoPago.COMPLETADO || pago.getMetodoPago() == MetodoPago.EFECTIVO);
 
         if (!tienePagoCompletado) {
             throw new IllegalStateException("Debes realizar el pago correspondiente antes de firmar el contrato.");

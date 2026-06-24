@@ -92,6 +92,13 @@ public class StripeService {
 
         log.info("[DEBUG - StripeService] URLs de redirección calculadas para Stripe: successUrl={}, cancelUrl={}", dynamicSuccessUrl, dynamicCancelUrl);
 
+        String normalizedMoneda = moneda.trim().toLowerCase();
+        if (normalizedMoneda.contains("bs") || normalizedMoneda.contains("bob")) {
+            normalizedMoneda = "bob";
+        } else if (normalizedMoneda.contains("usd") || normalizedMoneda.contains("$")) {
+            normalizedMoneda = "usd";
+        }
+
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(dynamicSuccessUrl)
@@ -101,7 +108,7 @@ public class StripeService {
                                 .setQuantity(1L)
                                 .setPriceData(
                                         SessionCreateParams.LineItem.PriceData.builder()
-                                                .setCurrency(moneda.toLowerCase())
+                                                .setCurrency(normalizedMoneda)
                                                 .setUnitAmount((long) (precio.doubleValue() * 100))
                                                 .setProductData(
                                                         SessionCreateParams.LineItem.PriceData.ProductData.builder()
