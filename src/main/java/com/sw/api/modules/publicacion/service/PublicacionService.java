@@ -89,8 +89,10 @@ public class PublicacionService {
     }
 
     @Transactional(readOnly = true)
-    public List<PublicacionResponseDTO> obtenerTodasConFiltros(String tipoTransaccion, String ubicacion, String tipoInmueble, BigDecimal minPrecio, BigDecimal maxPrecio) {
-        return publicacionRepository.findByFiltros(tipoTransaccion, ubicacion, tipoInmueble, minPrecio, maxPrecio).stream()
+    public List<PublicacionResponseDTO> obtenerTodasConFiltros(String tipoTransaccion, String ubicacion,
+            String tipoInmueble, BigDecimal minPrecio, BigDecimal maxPrecio) {
+        return publicacionRepository.findByFiltros(tipoTransaccion, ubicacion, tipoInmueble, minPrecio, maxPrecio)
+                .stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -106,6 +108,7 @@ public class PublicacionService {
     public List<PublicacionResponseDTO> obtenerMisFavoritos(UUID usuarioId) {
         return favoritoRepository.findByUsuarioIdOrderByFechaAgregadoDesc(usuarioId).stream()
                 .map(Favorito::getPublicacion)
+                .filter(java.util.Objects::nonNull)
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -119,7 +122,7 @@ public class PublicacionService {
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             Publicacion publicacion = publicacionRepository.findById(idPublicacion)
                     .orElseThrow(() -> new RuntimeException("Publicación no encontrada"));
-            
+
             Favorito favorito = new Favorito();
             favorito.setUsuario(usuario);
             favorito.setPublicacion(publicacion);

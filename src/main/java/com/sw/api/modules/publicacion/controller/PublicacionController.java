@@ -41,28 +41,39 @@ public class PublicacionController {
             @RequestParam(required = false) String tipoInmueble,
             @RequestParam(required = false) BigDecimal minPrecio,
             @RequestParam(required = false) BigDecimal maxPrecio) {
-        
-        if (tipoTransaccion == null && ubicacion == null && tipoInmueble == null && minPrecio == null && maxPrecio == null) {
+
+        if (tipoTransaccion == null && ubicacion == null && tipoInmueble == null && minPrecio == null
+                && maxPrecio == null) {
             return ResponseEntity.ok(publicacionService.obtenerTodas());
         }
-        
-        return ResponseEntity.ok(publicacionService.obtenerTodasConFiltros(tipoTransaccion, ubicacion, tipoInmueble, minPrecio, maxPrecio));
+
+        return ResponseEntity.ok(publicacionService.obtenerTodasConFiltros(tipoTransaccion, ubicacion, tipoInmueble,
+                minPrecio, maxPrecio));
     }
 
     @GetMapping("/mis-publicaciones")
     public ResponseEntity<List<PublicacionResponseDTO>> obtenerMisPublicaciones(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.ok(new java.util.ArrayList<>());
+        }
         Usuario usuario = (Usuario) authentication.getPrincipal();
         return ResponseEntity.ok(publicacionService.obtenerPorUsuarioId(usuario.getId()));
     }
 
     @GetMapping("/mis-favoritos")
     public ResponseEntity<List<PublicacionResponseDTO>> obtenerMisFavoritos(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.ok(new java.util.ArrayList<>());
+        }
         Usuario usuario = (Usuario) authentication.getPrincipal();
         return ResponseEntity.ok(publicacionService.obtenerMisFavoritos(usuario.getId()));
     }
 
     @PostMapping("/{id}/favorito")
     public ResponseEntity<Void> alternarFavorito(@PathVariable UUID id, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Usuario usuario = (Usuario) authentication.getPrincipal();
         publicacionService.alternarFavorito(id, usuario.getId());
         return ResponseEntity.ok().build();
