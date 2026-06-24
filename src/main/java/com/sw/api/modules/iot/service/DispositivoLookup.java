@@ -29,25 +29,29 @@ public class DispositivoLookup {
                 .orElse("Dispositivo eliminado");
     }
 
-    public record CondicionesUso(String horarioLimiteUso, Integer maxHorasSeguidas) {
+    public record CondicionesUso(String horarioLimiteUso, String horarioLimiteFin, Integer maxHorasSeguidas) {
     }
 
     /**
-     * Lee horarioLimiteUso/maxHorasSeguidas del JSONB. Tolera que maxHorasSeguidas
-     * venga como Number o String (el wizard del frontend lo guarda como número, pero
-     * el JSONB no impone tipo), y trata 0/blank/ausente como "sin esa condición".
+     * Lee horarioLimiteUso/horarioLimiteFin/maxHorasSeguidas del JSONB. Tolera que
+     * maxHorasSeguidas venga como Number o String (el wizard del frontend lo guarda
+     * como número, pero el JSONB no impone tipo), y trata 0/blank/ausente como "sin
+     * esa condición". horarioLimiteFin puede ser null en dispositivos configurados
+     * antes de que existiera este campo (ver DeviceEnforcementScheduler para el
+     * fallback que mantiene compatibilidad con ese dato legacy).
      */
     public CondicionesUso condiciones(Inmueble inmueble, String dispositivoId) {
         Map<String, Object> dispositivo = buscar(inmueble, dispositivoId).orElse(Map.of());
 
-        Object horarioRaw = dispositivo.get("horarioLimiteUso");
-        String horarioLimiteUso = horarioRaw != null && !String.valueOf(horarioRaw).isBlank()
-                ? String.valueOf(horarioRaw)
-                : null;
-
+        String horarioLimiteUso = parseHora(dispositivo.get("horarioLimiteUso"));
+        String horarioLimiteFin = parseHora(dispositivo.get("horarioLimiteFin"));
         Integer maxHorasSeguidas = parseHoras(dispositivo.get("maxHorasSeguidas"));
 
-        return new CondicionesUso(horarioLimiteUso, maxHorasSeguidas);
+        return new CondicionesUso(horarioLimiteUso, horarioLimiteFin, maxHorasSeguidas);
+    }
+
+    private String parseHora(Object raw) {
+        return raw != null && !String.valueOf(raw).isBlank() ? String.valueOf(raw) : null;
     }
 
     private Integer parseHoras(Object raw) {

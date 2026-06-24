@@ -150,14 +150,34 @@ public class DeviceEnforcementScheduler {
         }
 
         if (!cortadoPorHorasContinuas && enUso && condiciones.horarioLimiteUso() != null) {
-            LocalTime limiteHora = parseHoraOLimiteNull(condiciones.horarioLimiteUso());
-            if (limiteHora != null && LocalTime.now().isAfter(limiteHora)) {
+            LocalTime inicio = parseHoraOLimiteNull(condiciones.horarioLimiteUso());
+            LocalTime fin = condiciones.horarioLimiteFin() != null
+                    ? parseHoraOLimiteNull(condiciones.horarioLimiteFin())
+                    : LocalTime.MIDNIGHT;
+            if (inicio != null && fin != null && dentroDeRangoRestringido(LocalTime.now(), inicio, fin)) {
                 cortarPorIncumplimiento(plug, inmueble, dispositivoId, contratoVigente.get(), sesionAbierta.orElse(null),
                         TipoIncumplimiento.HORARIO_LIMITE_EXCEDIDO,
-                        "El dispositivo seguía en uso después del horario límite (" + condiciones.horarioLimiteUso()
+                        "El dispositivo estaba en uso dentro del horario restringido (" + condiciones.horarioLimiteUso()
+                                + " - " + (condiciones.horarioLimiteFin() != null ? condiciones.horarioLimiteFin() : "00:00")
                                 + ").");
             }
         }
+    }
+
+    /**
+     * Cubre tanto un rango normal (ej. 09:00-17:00) como uno que cruza medianoche
+     * (ej. 22:00-06:00). Cuando horarioLimiteFin no está configurado (dato legacy),
+     * el caller pasa fin=MIDNIGHT, lo que reproduce exactamente el comportamiento
+     * anterior a este cambio: bloqueado desde "inicio" hasta el final del día.
+     */
+    private boolean dentroDeRangoRestringido(LocalTime ahora, LocalTime inicio, LocalTime fin) {
+        if (inicio.equals(fin)) {
+            return false;
+        }
+        if (inicio.isBefore(fin)) {
+            return !ahora.isBefore(inicio) && ahora.isBefore(fin);
+        }
+        return !ahora.isBefore(inicio) || ahora.isBefore(fin);
     }
 
     private void cortarPorIncumplimiento(SmartPlug plug, Inmueble inmueble, String dispositivoId, Contrato contrato,
