@@ -178,6 +178,17 @@
                     <artifactId>core</artifactId>
                     <version>4.10.0</version>
                 </dependency>
+                <!-- Tuya Cloud API: cliente HTTP reactivo -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-webflux</artifactId>
+                </dependency>
+                <!-- Tuya Cloud API: firma HMAC-SHA256 -->
+                <dependency>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                    <version>1.16.0</version>
+                </dependency>
 	</dependencies>
 
 	<build>
