@@ -41,6 +41,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/**").authenticated()
                         .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/reportes/**").hasAuthority("ROLE_ADMIN")
+                        // El propietario dispara esto al publicar/editar su propio inmueble
+                        .requestMatchers(HttpMethod.POST, "/api/iot/tickets/sync-inmueble/**").authenticated()
                         .requestMatchers("/api/iot/**").hasAuthority("ROLE_ADMIN")
                         // Cualquier otra petición a la API exigirá un token válido
                         .anyRequest().authenticated())

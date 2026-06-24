@@ -1,19 +1,24 @@
 package com.sw.api.modules.iot.service;
 
+import com.sw.api.modules.inmueble.model.Inmueble;
+import com.sw.api.modules.inmueble.repository.InmuebleRepository;
+import com.sw.api.modules.iot.dto.DeviceViolationDTO;
+import com.sw.api.modules.iot.dto.PlugPowerReadingDTO;
 import com.sw.api.modules.iot.dto.PlugTestResultDTO;
 import com.sw.api.modules.iot.dto.SmartPlugCreateRequestDTO;
 import com.sw.api.modules.iot.dto.SmartPlugDTO;
 import com.sw.api.modules.iot.dto.TuyaDeviceScanResultDTO;
-import com.sw.api.modules.iot.model.Appliance;
+import com.sw.api.modules.iot.model.InstallationTicketStatus;
 import com.sw.api.modules.iot.model.PlugAssignment;
 import com.sw.api.modules.iot.model.PlugStatus;
 import com.sw.api.modules.iot.model.SmartPlug;
-import com.sw.api.modules.iot.repository.ApplianceRepository;
+import com.sw.api.modules.iot.repository.DeviceViolationRepository;
+import com.sw.api.modules.iot.repository.InstallationTicketRepository;
 import com.sw.api.modules.iot.repository.PlugAssignmentRepository;
+import com.sw.api.modules.iot.repository.PlugPowerReadingRepository;
 import com.sw.api.modules.iot.repository.SmartPlugRepository;
 import com.sw.api.modules.iot.tuya.TuyaApiClient;
 import com.sw.api.modules.iot.tuya.dto.TuyaDevice;
-import com.sw.api.modules.iot.tuya.dto.TuyaStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,15 +34,27 @@ import java.util.stream.Collectors;
 public class SmartPlugService {
 
     private final SmartPlugRepository smartPlugRepository;
-    private final ApplianceRepository applianceRepository;
+    private final InmuebleRepository inmuebleRepository;
     private final PlugAssignmentRepository plugAssignmentRepository;
+    private final InstallationTicketRepository installationTicketRepository;
+    private final PlugPowerReadingRepository plugPowerReadingRepository;
+    private final DeviceViolationRepository deviceViolationRepository;
+    private final DispositivoLookup dispositivoLookup;
     private final TuyaApiClient tuyaApiClient;
 
-    public SmartPlugService(SmartPlugRepository smartPlugRepository, ApplianceRepository applianceRepository,
-            PlugAssignmentRepository plugAssignmentRepository, TuyaApiClient tuyaApiClient) {
+    public SmartPlugService(SmartPlugRepository smartPlugRepository, InmuebleRepository inmuebleRepository,
+            PlugAssignmentRepository plugAssignmentRepository,
+            InstallationTicketRepository installationTicketRepository,
+            PlugPowerReadingRepository plugPowerReadingRepository,
+            DeviceViolationRepository deviceViolationRepository, DispositivoLookup dispositivoLookup,
+            TuyaApiClient tuyaApiClient) {
         this.smartPlugRepository = smartPlugRepository;
-        this.applianceRepository = applianceRepository;
+        this.inmuebleRepository = inmuebleRepository;
         this.plugAssignmentRepository = plugAssignmentRepository;
+        this.installationTicketRepository = installationTicketRepository;
+        this.plugPowerReadingRepository = plugPowerReadingRepository;
+        this.deviceViolationRepository = deviceViolationRepository;
+        this.dispositivoLookup = dispositivoLookup;
         this.tuyaApiClient = tuyaApiClient;
     }
 
@@ -83,9 +100,11 @@ public class SmartPlugService {
     public PlugTestResultDTO testPlugConnection(UUID plugId) {
         SmartPlug plug = obtenerEntidadPorId(plugId);
 
-        List<TuyaStatus> statusList = tuyaApiClient.getDeviceStatus(plug.getTuyaDeviceId());
-        boolean online = statusList.stream().anyMatch(s -> "switch_1".equals(s.code()));
-        if (!online) {
+        // El campo "online" del detalle del dispositivo refleja la conexión real con Tuya.
+        // El endpoint de status puede devolver dp's con valores cacheados aunque el equipo
+        // esté desconectado, así que no sirve para decidir si está online.
+        TuyaDevice device = tuyaApiClient.getDeviceDetail(plug.getTuyaDeviceId());
+        if (!device.online()) {
             return new PlugTestResultDTO(false, false,
                     "El enchufe está fuera de línea. Verifica que esté conectado al WiFi.");
         }
@@ -111,18 +130,35 @@ public class SmartPlugService {
     }
 
     @Transactional
-    public SmartPlugDTO assignPlug(UUID plugId, UUID applianceId) {
+    public SmartPlugDTO assignPlug(UUID plugId, UUID inmuebleId, String dispositivoId) {
         SmartPlug plug = obtenerEntidadPorId(plugId);
-        Appliance appliance = applianceRepository.findById(applianceId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appliance no encontrado"));
+        Inmueble inmueble = inmuebleRepository.findById(inmuebleId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inmueble no encontrado"));
+        dispositivoLookup.buscar(inmueble, dispositivoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "El dispositivo no existe en este inmueble"));
 
         PlugAssignment assignment = new PlugAssignment();
         assignment.setSmartPlug(plug);
-        assignment.setAppliance(appliance);
+        assignment.setInmueble(inmueble);
+        assignment.setDispositivoId(dispositivoId);
         assignment.setAssignedAt(LocalDateTime.now());
         plugAssignmentRepository.save(assignment);
 
         plug.setStatus(PlugStatus.ASSIGNED);
+
+        // El técnico ya instaló y probó el enchufe físicamente; esta acción explícita
+        // es la única señal real de que la instalación quedó completa, así que cierra
+        // el ticket correspondiente si todavía estaba abierto.
+        installationTicketRepository
+                .findFirstByInmueble_IdAndDispositivoIdAndStatusIn(inmuebleId, dispositivoId,
+                        List.of(InstallationTicketStatus.PENDING, InstallationTicketStatus.SCHEDULED,
+                                InstallationTicketStatus.IN_PROGRESS))
+                .ifPresent(ticket -> {
+                    ticket.setStatus(InstallationTicketStatus.CLOSED);
+                    installationTicketRepository.save(ticket);
+                });
+
         return mapToDTO(smartPlugRepository.save(plug));
     }
 
@@ -138,6 +174,26 @@ public class SmartPlugService {
 
         plug.setStatus(PlugStatus.AVAILABLE);
         return mapToDTO(smartPlugRepository.save(plug));
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlugPowerReadingDTO> getPowerReadings(UUID plugId, int hours) {
+        SmartPlug plug = obtenerEntidadPorId(plugId);
+        LocalDateTime desde = LocalDateTime.now().minusHours(hours);
+        return plugPowerReadingRepository
+                .findAllBySmartPlug_IdAndRecordedAtAfterOrderByRecordedAtAsc(plug.getId(), desde)
+                .stream()
+                .map(r -> new PlugPowerReadingDTO(r.getRecordedAt(), r.getCurPower(), r.isOnline()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DeviceViolationDTO> getViolations(UUID plugId) {
+        SmartPlug plug = obtenerEntidadPorId(plugId);
+        return deviceViolationRepository.findAllBySmartPlug_IdOrderByDetectedAtDesc(plug.getId())
+                .stream()
+                .map(v -> new DeviceViolationDTO(v.getId(), v.getTipo(), v.getDetectedAt(), v.getDetalle()))
+                .toList();
     }
 
     private SmartPlug obtenerEntidadPorId(UUID id) {
@@ -157,9 +213,9 @@ public class SmartPlugService {
         SmartPlugDTO.CurrentAssignmentDTO current = plugAssignmentRepository
                 .findFirstBySmartPlug_IdAndUnassignedAtIsNull(plug.getId())
                 .map(a -> new SmartPlugDTO.CurrentAssignmentDTO(
-                        a.getAppliance().getId(),
-                        a.getAppliance().getName(),
-                        describeProperty(a.getAppliance()),
+                        a.getDispositivoId(),
+                        dispositivoLookup.nombreOFallback(a.getInmueble(), a.getDispositivoId()),
+                        describeProperty(a.getInmueble()),
                         a.getAssignedAt()))
                 .orElse(null);
 
@@ -167,8 +223,7 @@ public class SmartPlugService {
                 plug.getNotes(), current);
     }
 
-    private String describeProperty(Appliance appliance) {
-        var inmueble = appliance.getInmueble();
+    private String describeProperty(Inmueble inmueble) {
         if (inmueble == null) {
             return "—";
         }

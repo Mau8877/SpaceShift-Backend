@@ -8,10 +8,13 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface PublicacionRepository extends JpaRepository<Publicacion, UUID> {
+
+    Optional<Publicacion> findFirstByInmueble_IdOrderByFechaPublicacionDesc(UUID inmuebleId);
 
     @Query("SELECT DISTINCT p.tipoTransaccion FROM Publicacion p WHERE p.tipoTransaccion IS NOT NULL")
     List<String> findDistinctTipoTransaccion();

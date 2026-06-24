@@ -21,27 +21,31 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "installation_ticket")
-public class InstallationTicket extends Auditable {
+@Table(name = "device_violation")
+public class DeviceViolation extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne
+    @JoinColumn(name = "id_smart_plug", nullable = false)
+    private SmartPlug smartPlug;
+
+    @ManyToOne
     @JoinColumn(name = "id_inmueble", nullable = false)
     private Inmueble inmueble;
 
-    @Column(name = "dispositivo_id", length = 64)
+    @Column(name = "dispositivo_id", nullable = false, length = 64)
     private String dispositivoId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private InstallationTicketStatus status = InstallationTicketStatus.PENDING;
+    @Column(nullable = false, length = 30)
+    private TipoIncumplimiento tipo;
 
-    @Column(name = "requested_at", nullable = false)
-    private LocalDateTime requestedAt;
+    @Column(name = "detected_at", nullable = false)
+    private LocalDateTime detectedAt;
 
-    @Column(name = "scheduled_at")
-    private LocalDateTime scheduledAt;
+    @Column(columnDefinition = "TEXT")
+    private String detalle;
 }

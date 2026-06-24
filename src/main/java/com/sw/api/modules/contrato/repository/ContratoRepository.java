@@ -1,6 +1,7 @@
 package com.sw.api.modules.contrato.repository;
 
 import com.sw.api.modules.contrato.model.Contrato;
+import com.sw.api.modules.contrato.model.EstadoContrato;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,7 @@ public interface ContratoRepository extends JpaRepository<Contrato, UUID> {
 
     List<Contrato> findByPropietarioIdOrderByCreatedDateDesc(UUID propietarioId);
     List<Contrato> findByClienteIdOrderByCreatedDateDesc(UUID clienteId);
+    List<Contrato> findByInmueble_IdAndEstadoContrato(UUID inmuebleId, EstadoContrato estado);
 
     @Query("SELECT COUNT(c) > 0 FROM Contrato c WHERE c.inmueble.id = :inmuebleId " +
            "AND c.estadoContrato = 'VIGENTE' " +

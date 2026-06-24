@@ -14,8 +14,8 @@ public record SmartPlugDTO(
         CurrentAssignmentDTO currentAssignment) {
 
     public record CurrentAssignmentDTO(
-            UUID applianceId,
-            String applianceName,
+            String dispositivoId,
+            String dispositivoNombre,
             String propertyName,
             LocalDateTime assignedAt) {
     }

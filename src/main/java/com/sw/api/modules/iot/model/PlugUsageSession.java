@@ -1,6 +1,5 @@
 package com.sw.api.modules.iot.model;
 
-import com.sw.api.modules.inmueble.model.Inmueble;
 import com.sw.api.shared.model.Auditable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,8 +18,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "plug_assignment")
-public class PlugAssignment extends Auditable {
+@Table(name = "plug_usage_session")
+public class PlugUsageSession extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,16 +29,9 @@ public class PlugAssignment extends Auditable {
     @JoinColumn(name = "id_smart_plug", nullable = false)
     private SmartPlug smartPlug;
 
-    @ManyToOne
-    @JoinColumn(name = "id_inmueble", nullable = false)
-    private Inmueble inmueble;
+    @Column(name = "started_at", nullable = false)
+    private LocalDateTime startedAt;
 
-    @Column(name = "dispositivo_id", nullable = false, length = 64)
-    private String dispositivoId;
-
-    @Column(name = "assigned_at", nullable = false)
-    private LocalDateTime assignedAt;
-
-    @Column(name = "unassigned_at")
-    private LocalDateTime unassignedAt;
+    @Column(name = "ended_at")
+    private LocalDateTime endedAt;
 }

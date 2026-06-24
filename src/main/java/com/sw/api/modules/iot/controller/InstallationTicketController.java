@@ -29,4 +29,10 @@ public class InstallationTicketController {
             @RequestBody UpdateTicketStatusRequestDTO request) {
         return ResponseEntity.ok(installationTicketService.updateStatus(id, request));
     }
+
+    @PostMapping("/sync-inmueble/{inmuebleId}")
+    public ResponseEntity<Void> sincronizar(@PathVariable UUID inmuebleId) {
+        installationTicketService.sincronizarTicketsDeInmueble(inmuebleId);
+        return ResponseEntity.noContent().build();
+    }
 }

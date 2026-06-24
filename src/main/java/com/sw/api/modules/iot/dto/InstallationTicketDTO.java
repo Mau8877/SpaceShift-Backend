@@ -9,6 +9,9 @@ public record InstallationTicketDTO(
         UUID id,
         UUID propertyId,
         String propertyName,
+        String dispositivoId,
+        String dispositivoNombre,
+        UUID publicacionId,
         InstallationTicketStatus status,
         LocalDateTime requestedAt,
         LocalDateTime scheduledAt) {

@@ -1,7 +1,9 @@
 package com.sw.api.modules.iot.controller;
 
 import com.sw.api.modules.iot.dto.AssignPlugRequestDTO;
+import com.sw.api.modules.iot.dto.DeviceViolationDTO;
 import com.sw.api.modules.iot.dto.PlugCommandRequestDTO;
+import com.sw.api.modules.iot.dto.PlugPowerReadingDTO;
 import com.sw.api.modules.iot.dto.PlugTestResultDTO;
 import com.sw.api.modules.iot.dto.SmartPlugCreateRequestDTO;
 import com.sw.api.modules.iot.dto.SmartPlugDTO;
@@ -52,11 +54,22 @@ public class SmartPlugController {
 
     @PostMapping("/{id}/assign")
     public ResponseEntity<SmartPlugDTO> asignar(@PathVariable UUID id, @RequestBody AssignPlugRequestDTO request) {
-        return ResponseEntity.ok(smartPlugService.assignPlug(id, request.applianceId()));
+        return ResponseEntity.ok(smartPlugService.assignPlug(id, request.inmuebleId(), request.dispositivoId()));
     }
 
     @PostMapping("/{id}/unassign")
     public ResponseEntity<SmartPlugDTO> desasignar(@PathVariable UUID id) {
         return ResponseEntity.ok(smartPlugService.unassignPlug(id));
+    }
+
+    @GetMapping("/{id}/power-readings")
+    public ResponseEntity<List<PlugPowerReadingDTO>> obtenerLecturasDeConsumo(@PathVariable UUID id,
+            @RequestParam(defaultValue = "24") int hours) {
+        return ResponseEntity.ok(smartPlugService.getPowerReadings(id, hours));
+    }
+
+    @GetMapping("/{id}/violations")
+    public ResponseEntity<List<DeviceViolationDTO>> obtenerIncumplimientos(@PathVariable UUID id) {
+        return ResponseEntity.ok(smartPlugService.getViolations(id));
     }
 }
